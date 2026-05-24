@@ -3056,5 +3056,189 @@ document.addEventListener("error", function(e){
 })();
 </script>
 
+
+
+<!-- === V21 ticker stabilization: seamless mobile crawl, no hover pause === -->
+<style>
+  .sports-crawl-window{overflow:hidden!important;}
+  .sports-crawl-track{
+    display:inline-flex!important;
+    align-items:center!important;
+    white-space:nowrap!important;
+    padding-left:0!important;
+    animation-name:sportsCrawlV21!important;
+    animation-duration:var(--ticker-duration,72s)!important;
+    animation-timing-function:linear!important;
+    animation-iteration-count:infinite!important;
+    animation-play-state:running!important;
+    will-change:transform;
+  }
+  .sports-crawl:hover .sports-crawl-track,
+  .sports-crawl:active .sports-crawl-track,
+  .sports-crawl:focus .sports-crawl-track{animation-play-state:running!important;}
+  @keyframes sportsCrawlV21{
+    0%{transform:translateX(0)}
+    100%{transform:translateX(var(--ticker-distance,-50%))}
+  }
+  @media(max-width:760px){
+    .sports-crawl-track{font-size:10.5px!important;letter-spacing:.03em!important;}
+    .ticker-item{margin-right:26px!important;}
+    .ticker-tag{padding:2px 6px!important;margin-right:6px!important;}
+  }
+</style>
+<script>
+(function(){
+  function getBaseTickerHTML(el){
+    const items=[...el.querySelectorAll('.ticker-item')].map(x=>x.outerHTML);
+    if(!items.length) return el.innerHTML.trim();
+    let n=items.length;
+    if(n%4===0){
+      const q=n/4;
+      const a=items.slice(0,q).join('');
+      if(items.slice(q,2*q).join('')===a) return a;
+    }
+    if(n%3===0){
+      const t=n/3;
+      const a=items.slice(0,t).join('');
+      if(items.slice(t,2*t).join('')===a) return a;
+    }
+    if(n%2===0){
+      const h=n/2;
+      const a=items.slice(0,h).join('');
+      if(items.slice(h).join('')===a) return a;
+    }
+    return items.join('');
+  }
+  function tuneTickerV21(){
+    const el=document.getElementById('sportsCrawlTrack');
+    const win=document.querySelector('.sports-crawl-window');
+    if(!el||!win) return;
+    const base=getBaseTickerHTML(el);
+    if(!base) return;
+    el.innerHTML=`<span class="ticker-segment">${base}</span><span class="ticker-segment" aria-hidden="true">${base}</span>`;
+    requestAnimationFrame(()=>{
+      const seg=el.querySelector('.ticker-segment');
+      const width=seg ? seg.getBoundingClientRect().width : 0;
+      if(!width) return;
+      const mobile=window.matchMedia && window.matchMedia('(max-width:760px)').matches;
+      const speed=mobile?120:55; // pixels per second. Mobile needs to be noticeably faster.
+      const min=mobile?16:48;
+      const max=mobile?34:82;
+      const dur=Math.max(min,Math.min(max,width/speed));
+      el.style.setProperty('--ticker-distance',`-${Math.ceil(width)}px`);
+      el.style.setProperty('--ticker-duration',`${dur.toFixed(1)}s`);
+      el.style.animation='none';
+      // force restart after measuring
+      void el.offsetWidth;
+      el.style.animation='sportsCrawlV21 var(--ticker-duration) linear infinite';
+    });
+  }
+  const previousUpdate = window.updateTickerV18 || window.updateTickerV17 || window.updateTickerV16 || window.loadTicker;
+  window.updateTickerV21 = async function(){
+    if(typeof previousUpdate==='function') await previousUpdate();
+    setTimeout(tuneTickerV21,120);
+  };
+  const previousEnsure=window.ensureTabs;
+  window.ensureTabs=function(){
+    if(typeof previousEnsure==='function') previousEnsure();
+    setTimeout(window.updateTickerV21,220);
+  };
+  window.addEventListener('resize',()=>setTimeout(tuneTickerV21,150),{passive:true});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(window.updateTickerV21,500));
+  else setTimeout(window.updateTickerV21,500);
+})();
+</script>
+
+
+
+<!-- === V22 ticker hard reset: simple stable mobile/desktop crawl === -->
+<style>
+  /* Hard reset the ticker after the older experimental ticker scripts. */
+  .sports-crawl-window{overflow:hidden!important;min-width:0!important;}
+  .sports-crawl-track{
+    display:flex!important;
+    align-items:center!important;
+    width:max-content!important;
+    max-width:none!important;
+    white-space:nowrap!important;
+    padding-left:0!important;
+    transform:translateX(0);
+    animation:sportsCrawlV22 95s linear infinite!important;
+    animation-play-state:running!important;
+    will-change:transform;
+  }
+  .sports-crawl:hover .sports-crawl-track,
+  .sports-crawl:active .sports-crawl-track,
+  .sports-crawl:focus .sports-crawl-track{animation-play-state:running!important;}
+  .ticker-segment{display:inline-flex!important;align-items:center!important;flex:0 0 auto!important;white-space:nowrap!important;}
+  @keyframes sportsCrawlV22{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+  @media(max-width:760px){
+    .sports-crawl-track{animation-duration:30s!important;font-size:10.5px!important;letter-spacing:.03em!important;}
+    .ticker-item{margin-right:28px!important;}
+    .ticker-tag{padding:2px 6px!important;margin-right:6px!important;}
+  }
+</style>
+<script>
+(function(){
+  function escLocal(x){
+    try{ if(typeof h==='function') return h(x); }catch(e){}
+    return String(x??'').replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+  function cleanTickerName(n){
+    return String(n||'').replace(/â€™/g,'’').replace(/\s+-\s*\(\s*Bye week\s*\)/i,'');
+  }
+  async function buildTickerItemsV22(){
+    const items=[];
+    try{
+      const league=(typeof FANTRAX_LIVE!=='undefined'&&FANTRAX_LIVE.league)||'bbl';
+      const res=await fetch(`/api/fantrax?league=${encodeURIComponent(league)}&endpoint=standings`,{cache:'no-store'});
+      const js=await res.json();
+      const rows=Array.isArray(js.data)?js.data:(Array.isArray(js.data?.data)?js.data.data:[]);
+      rows.slice().sort((a,b)=>(+a.rank||99)-(+b.rank||99)).slice(0,4).forEach(r=>{
+        items.push(`<span class="ticker-item"><span class="ticker-tag">Standings</span>${escLocal(cleanTickerName(r.teamName))} #${escLocal(r.rank)} · ${escLocal(r.points||'')} · ${escLocal(r.totalPointsFor)} pts</span>`);
+      });
+    }catch(e){
+      items.push(`<span class="ticker-item"><span class="ticker-tag">Standings</span>Live standings loading...</span>`);
+    }
+    try{
+      if(typeof window.buildDraftTickerItemsV18==='function') items.push(...window.buildDraftTickerItemsV18());
+    }catch(e){
+      items.push(`<span class="ticker-item"><span class="ticker-tag">Draft Results</span>Draft order posted.</span>`);
+    }
+    let win=null; try{ if(typeof champWinner==='function') win=champWinner(); }catch(e){}
+    items.push(`<span class="ticker-item"><span class="ticker-tag">Champions</span>Congrats to ${escLocal(win?.team||'our winner')}${win?.season?` · ${escLocal(win.season)}`:''}.</span>`);
+    items.push(`<span class="ticker-item"><span class="ticker-tag">Awards</span>Prizes will be given out when the awards are announced.</span>`);
+    items.push(`<span class="ticker-item"><span class="ticker-tag">League News</span>New Season Meeting TBA.</span>`);
+    items.push(`<span class="ticker-item"><span class="ticker-tag">Rules Desk</span>Rule Changes TBA.</span>`);
+    items.push(`<span class="ticker-item"><span class="ticker-tag">Draft Desk</span>Draft Date TBA.</span>`);
+    return items;
+  }
+  window.updateTickerV22 = async function(){
+    const el=document.getElementById('sportsCrawlTrack');
+    if(!el) return;
+    const items=await buildTickerItemsV22();
+    const base=items.join('');
+    el.innerHTML=`<span class="ticker-segment">${base}</span><span class="ticker-segment" aria-hidden="true">${base}</span>`;
+    el.style.animation='none';
+    void el.offsetWidth;
+    el.style.animation='sportsCrawlV22 95s linear infinite';
+    if(window.matchMedia && window.matchMedia('(max-width:760px)').matches){
+      el.style.animationDuration='30s';
+    }
+  };
+  // Neuter the older ticker wrappers so they do not re-measure and erase the mobile ticker.
+  window.updateTickerV20=window.updateTickerV22;
+  window.updateTickerV21=window.updateTickerV22;
+  const oldEnsure=window.ensureTabs;
+  window.ensureTabs=function(){
+    if(typeof oldEnsure==='function') oldEnsure();
+    setTimeout(window.updateTickerV22,900);
+  };
+  window.addEventListener('resize',()=>setTimeout(window.updateTickerV22,250),{passive:true});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(window.updateTickerV22,900));
+  else setTimeout(window.updateTickerV22,900);
+})();
+</script>
+
 </body>
 </html>
