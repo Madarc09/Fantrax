@@ -3240,5 +3240,124 @@ document.addEventListener("error", function(e){
 })();
 </script>
 
+
+
+<!-- === V23 ticker isolation: replace fragile mobile ticker with protected track === -->
+<style>
+  .sports-crawl-window{overflow:hidden!important;min-width:0!important;position:relative!important;}
+  .sports-crawl-track-v23{
+    display:flex!important;
+    align-items:center!important;
+    width:max-content!important;
+    max-width:none!important;
+    white-space:nowrap!important;
+    padding-left:0!important;
+    transform:translate3d(0,0,0);
+    animation:sportsCrawlV23 95s linear infinite!important;
+    animation-play-state:running!important;
+    will-change:transform;
+  }
+  .sports-crawl:hover .sports-crawl-track-v23,
+  .sports-crawl:active .sports-crawl-track-v23,
+  .sports-crawl:focus .sports-crawl-track-v23{animation-play-state:running!important;}
+  .sports-crawl-track-v23 .ticker-segment{display:inline-flex!important;align-items:center!important;flex:0 0 auto!important;white-space:nowrap!important;}
+  @keyframes sportsCrawlV23{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(-50%,0,0)}}
+  @media(max-width:760px){
+    .sports-crawl{min-height:31px!important;}
+    .sports-crawl-track-v23{animation-duration:54s!important;font-size:10.5px!important;letter-spacing:.03em!important;}
+    .sports-crawl-track-v23 .ticker-item{margin-right:30px!important;}
+    .sports-crawl-track-v23 .ticker-tag{padding:2px 6px!important;margin-right:6px!important;}
+  }
+</style>
+<script>
+(function(){
+  function escLocal(x){
+    try{ if(typeof h==='function') return h(x); }catch(e){}
+    return String(x??'').replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+  function cleanTickerName(n){
+    return String(n||'').replace(/â€™/g,'’').replace(/\s+-\s*\(\s*Bye week\s*\)/i,'');
+  }
+  function ordinal(n){
+    n=Number(n); const s=['th','st','nd','rd'], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]);
+  }
+  async function buildTickerItemsV23(){
+    const items=[];
+    try{
+      const league=(typeof FANTRAX_LIVE!=='undefined'&&FANTRAX_LIVE.league)||'bbl';
+      const res=await fetch(`/api/fantrax?league=${encodeURIComponent(league)}&endpoint=standings`,{cache:'no-store'});
+      const js=await res.json();
+      const rows=Array.isArray(js.data)?js.data:(Array.isArray(js.data?.data)?js.data.data:[]);
+      rows.slice().sort((a,b)=>(+a.rank||99)-(+b.rank||99)).slice(0,4).forEach(r=>{
+        items.push(`<span class="ticker-item"><span class="ticker-tag">Standings</span>${escLocal(cleanTickerName(r.teamName))} #${escLocal(r.rank)} · ${escLocal(r.points||'')} · ${escLocal(r.totalPointsFor)} pts</span>`);
+      });
+    }catch(e){
+      items.push(`<span class="ticker-item"><span class="ticker-tag">Standings</span>Live standings loading...</span>`);
+    }
+    try{
+      if(Array.isArray(window.LOCAL_DRAFT_TICKER)&&window.LOCAL_DRAFT_TICKER.length){
+        window.LOCAL_DRAFT_TICKER.forEach(p=>items.push(`<span class="ticker-item"><span class="ticker-tag">Draft Results</span>${escLocal(p.label)}</span>`));
+      }else if(typeof window.buildDraftTickerItemsV18==='function'){
+        items.push(...window.buildDraftTickerItemsV18());
+      }else if(typeof DRAFT_ORDER!=='undefined'&&Array.isArray(DRAFT_ORDER)&&DRAFT_ORDER.length){
+        DRAFT_ORDER.slice().sort((a,b)=>(+a.pick||0)-(+b.pick||0)).forEach(p=>{
+          const label=`${ordinal(p.pick)} pick: ${p.drafting}${p.original&&p.original!==p.drafting?` (originally owned by ${p.original})`:''}`;
+          items.push(`<span class="ticker-item"><span class="ticker-tag">Draft Results</span>${escLocal(label)}</span>`);
+        });
+      }else{
+        items.push(`<span class="ticker-item"><span class="ticker-tag">Draft Results</span>Draft results TBA.</span>`);
+      }
+    }catch(e){ items.push(`<span class="ticker-item"><span class="ticker-tag">Draft Results</span>Draft results TBA.</span>`); }
+    let win=null; try{ if(typeof champWinner==='function') win=champWinner(); }catch(e){}
+    items.push(`<span class="ticker-item"><span class="ticker-tag">Champions</span>Congrats to ${escLocal(win?.team||'our winner')}${win?.season?` · ${escLocal(win.season)}`:''}.</span>`);
+    items.push(`<span class="ticker-item"><span class="ticker-tag">Awards</span>Prizes will be given out when the awards are announced.</span>`);
+    items.push(`<span class="ticker-item"><span class="ticker-tag">League News</span>New Season Meeting TBA.</span>`);
+    items.push(`<span class="ticker-item"><span class="ticker-tag">Rules Desk</span>Rule Changes TBA.</span>`);
+    items.push(`<span class="ticker-item"><span class="ticker-tag">Draft Desk</span>Draft Date TBA.</span>`);
+    return items;
+  }
+  async function mountTickerV23(){
+    const crawl=document.getElementById('sportsCrawl');
+    if(!crawl) return;
+    let win=crawl.querySelector('.sports-crawl-window');
+    if(!win){
+      crawl.insertAdjacentHTML('beforeend','<div class="sports-crawl-window"></div>');
+      win=crawl.querySelector('.sports-crawl-window');
+    }
+    // Remove the old ID so older v19/v20/v21/v22 scripts cannot find and overwrite this ticker on mobile.
+    const old=document.getElementById('sportsCrawlTrack');
+    if(old) old.remove();
+    let track=document.getElementById('sportsTickerV23');
+    if(!track){
+      track=document.createElement('div');
+      track.id='sportsTickerV23';
+      track.className='sports-crawl-track-v23';
+      win.innerHTML='';
+      win.appendChild(track);
+    }
+    const items=await buildTickerItemsV23();
+    const base=items.join('');
+    track.innerHTML=`<span class="ticker-segment">${base}</span><span class="ticker-segment" aria-hidden="true">${base}</span>`;
+    track.style.animation='none';
+    void track.offsetWidth;
+    const mobile=window.matchMedia&&window.matchMedia('(max-width:760px)').matches;
+    track.style.animation=`sportsCrawlV23 ${mobile?'54s':'95s'} linear infinite`;
+  }
+  window.updateTickerV23=mountTickerV23;
+  // Neuter every older ticker updater. They look for #sportsCrawlTrack; v23 removes it permanently.
+  window.updateTickerV18=window.updateTickerV19=window.updateTickerV20=window.updateTickerV21=window.updateTickerV22=function(){return mountTickerV23();};
+  const previousEnsure=window.ensureTabs;
+  window.ensureTabs=function(){
+    if(typeof previousEnsure==='function') previousEnsure();
+    setTimeout(mountTickerV23,300);
+    setTimeout(mountTickerV23,1400);
+    setTimeout(mountTickerV23,3000);
+  };
+  window.addEventListener('resize',()=>setTimeout(mountTickerV23,250),{passive:true});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{setTimeout(mountTickerV23,300);setTimeout(mountTickerV23,1600);});
+  else {setTimeout(mountTickerV23,300);setTimeout(mountTickerV23,1600);}
+})();
+</script>
+
 </body>
 </html>
