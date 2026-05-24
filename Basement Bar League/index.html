@@ -2994,5 +2994,67 @@ document.addEventListener("error", function(e){
     .ticker-item{margin-right:30px;}
   }
 </style>
+
+
+<!-- === V20 ticker calibration: desktop normal speed, mobile continuous no blank gap === -->
+<style>
+  .sports-crawl-track{
+    display:inline-flex!important;
+    align-items:center!important;
+    white-space:nowrap!important;
+    padding-left:0!important;
+    animation-name:sportsCrawlV20!important;
+    animation-duration:68s!important;
+    animation-timing-function:linear!important;
+    animation-iteration-count:infinite!important;
+    animation-play-state:running!important;
+    will-change:transform;
+  }
+  .sports-crawl:hover .sports-crawl-track,
+  .sports-crawl:active .sports-crawl-track,
+  .sports-crawl:focus .sports-crawl-track{
+    animation-play-state:running!important;
+  }
+  @keyframes sportsCrawlV20{
+    0%{transform:translateX(0)}
+    100%{transform:translateX(-25%)}
+  }
+  @media(max-width:760px){
+    .sports-crawl-track{animation-duration:44s!important;font-size:10.5px!important;letter-spacing:.035em!important;}
+    .ticker-item{margin-right:28px!important;}
+    .ticker-tag{padding:2px 6px!important;margin-right:6px!important;}
+  }
+</style>
+<script>
+(function(){
+  function forceTickerFourCopies(){
+    const el=document.getElementById('sportsCrawlTrack');
+    if(!el || el.dataset.v20Done==='1') return;
+    const html=el.innerHTML.trim();
+    if(!html) return;
+    // Earlier versions used 2-3 copies and animated the full track, which could create a blank gap on mobile.
+    // V20 uses four identical copies and scrolls exactly one quarter of the track for a continuous sports ticker.
+    el.innerHTML=html+html+html+html;
+    el.dataset.v20Done='1';
+  }
+  const prevUpdate=window.updateTickerV18||window.updateTickerV17||window.updateTickerV16||window.loadTicker;
+  window.updateTickerV20=async function(){
+    if(typeof prevUpdate==='function'){
+      await prevUpdate();
+      const el=document.getElementById('sportsCrawlTrack');
+      if(el){ el.dataset.v20Done='0'; }
+    }
+    setTimeout(forceTickerFourCopies,80);
+  };
+  const prevEnsure=window.ensureTabs;
+  window.ensureTabs=function(){
+    if(typeof prevEnsure==='function') prevEnsure();
+    setTimeout(window.updateTickerV20,160);
+  };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(window.updateTickerV20,350));
+  else setTimeout(window.updateTickerV20,350);
+})();
+</script>
+
 </body>
 </html>
