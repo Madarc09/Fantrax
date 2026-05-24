@@ -2945,5 +2945,54 @@ document.addEventListener("error", function(e){
 })();
 </script>
 
+
+
+<!-- === V18 ticker correction: full draft order crawl from local Draft Order page === -->
+<script>
+(function(){
+  const LOCAL_DRAFT_TICKER = [{"pick": 1, "label": "1st pick: Damo's Dusters (originally owned by Early Tankers)"}, {"pick": 2, "label": "2nd pick: Damo's Dusters (originally owned by Tuch her Sanheim)"}, {"pick": 3, "label": "3rd pick: The Dead Sea (originally owned by Chewbacca)"}, {"pick": 4, "label": "4th pick: Red Dragon (originally owned by Red Dragon)"}, {"pick": 5, "label": "5th pick: The Dead Sea (originally owned by The Dead Sea – Bye Week)"}, {"pick": 6, "label": "6th pick: Puck Her Right in the Josi (originally owned by Puck Her Right in the Josi)"}, {"pick": 7, "label": "7th pick: Damo's Dusters (originally owned by Spartans)"}, {"pick": 8, "label": "8th pick: North Kariya (originally owned by North Kariya)"}, {"pick": 9, "label": "9th pick: Danbury Trashers (originally owned by Danbury Trashers)"}, {"pick": 10, "label": "10th pick: Dish (originally owned by Damo's Dusters)"}, {"pick": 11, "label": "11th pick: Puck Her Right in the Josi (originally owned by Cujo)"}, {"pick": 12, "label": "12th pick: Chewbacca (originally owned by Dish)"}, {"pick": 13, "label": "13th pick: North Kariya (originally owned by NG United)"}, {"pick": 14, "label": "14th pick: Chewbacca (originally owned by Don's Cherry Pickers)"}];
+  window.buildDraftTickerItemsV18 = function(){
+    return LOCAL_DRAFT_TICKER.map(p => `<span class="ticker-item"><span class="ticker-tag">Draft Results</span>${h(p.label)}</span>`);
+  };
+  window.updateTickerV18 = async function(){
+    const el=document.getElementById('sportsCrawlTrack');
+    if(!el)return;
+    const items=[];
+    try{
+      const league=(typeof FANTRAX_LIVE!=='undefined'&&FANTRAX_LIVE.league)||'bbl';
+      const res=await fetch(`/api/fantrax?league=${encodeURIComponent(league)}&endpoint=standings`,{cache:'no-store'});
+      const js=await res.json();
+      const rows=Array.isArray(js.data)?js.data:(Array.isArray(js.data?.data)?js.data.data:[]);
+      rows.slice().sort((a,b)=>(+a.rank||99)-(+b.rank||99)).slice(0,4).forEach(r=>items.push(`<span class="ticker-item"><span class="ticker-tag">Standings</span>${h(String(r.teamName||'').replace(/â€™/g,'’').replace(/\s+-\s*\(\s*Bye week\s*\)/i,''))} #${h(r.rank)} · ${h(r.points||'')} · ${h(r.totalPointsFor)} pts</span>`));
+    }catch(e){}
+    items.push(...window.buildDraftTickerItemsV18());
+    const win=(typeof champWinner==='function')?champWinner():null;
+    items.push(`<span class="ticker-item"><span class="ticker-tag">Champions</span>Congrats to ${h(win?.team||'our winner')}${win?.season?` · ${h(win.season)}`:''}.</span>`);
+    items.push(`<span class="ticker-item"><span class="ticker-tag">Awards</span>Prizes will be given out when the awards are announced.</span>`);
+    items.push(`<span class="ticker-item"><span class="ticker-tag">League News</span>New Season Meeting TBA.</span>`);
+    items.push(`<span class="ticker-item"><span class="ticker-tag">Rules Desk</span>Rule Changes TBA.</span>`);
+    items.push(`<span class="ticker-item"><span class="ticker-tag">Draft Desk</span>Draft Date TBA.</span>`);
+    el.innerHTML=(items.join('')+items.join('')+items.join(''));
+  };
+  const previousEnsureTabs=window.ensureTabs;
+  window.ensureTabs=function(){
+    if(typeof previousEnsureTabs==='function') previousEnsureTabs();
+    setTimeout(window.updateTickerV18,120);
+  };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(window.updateTickerV18,250));
+  else setTimeout(window.updateTickerV18,250);
+})();
+</script>
+
+
+<!-- === V19 ticker mobile speed fix: no hover pause, faster mobile crawl === -->
+<style>
+  .sports-crawl-track{animation-duration:38s!important;animation-play-state:running!important;}
+  .sports-crawl:hover .sports-crawl-track{animation-play-state:running!important;}
+  @media(max-width:760px){
+    .sports-crawl-track{animation-duration:22s!important;}
+    .ticker-item{margin-right:30px;}
+  }
+</style>
 </body>
 </html>
