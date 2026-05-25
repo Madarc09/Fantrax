@@ -3855,3 +3855,50 @@ document.addEventListener("error", function(e){
 
 </body>
 </html>
+
+
+<script>
+/* v38: static split hockey card image assets for Basement Bar League */
+(function(){
+  const v38CardMap = {
+    "Don's Cherry Pickers": "dons-cherry-pickers",
+    "The Dead Sea": "the-dead-sea",
+    "Puck Her Right in the Josi": "puck-her-right-in-the-josi",
+    "NG United": "ng-united",
+    "Early Tankers": "early-tankers",
+    "Danbury Trashers": "danbury-trashers",
+    "Cujo": "cujo",
+    "Red Dragon": "red-dragon",
+    "Damo's Dusters": "damos-dusters",
+    "North Kariya": "north-kariya",
+    "Chewbacca": "chewbacca",
+    "Spartans": "spartans",
+    "Tuch her Sanheim": "tuch-her-sanheim",
+    "Dish": "dish"
+  };
+  function v38TeamKey(teamName){
+    if(v38CardMap[teamName]) return v38CardMap[teamName];
+    return String(teamName||'').toLowerCase().replace(/&/g,'and').replace(/[’']/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  }
+  window.v35MatsFront = function(teamName){
+    if(typeof v35PoolTitle==='function' && v35PoolTitle()==='Basement Bar League'){
+      const key=v38TeamKey(teamName);
+      return `<img class="v36-exact-card-img v37-static-card-img v38-static-card-img" src="assets/hockeycards/${key}-front.png" alt="${String(teamName||'Team').replace(/"/g,'&quot;')} hockey card front">`;
+    }
+    return '';
+  };
+  window.v35MatsBack = function(teamName){
+    if(typeof v35PoolTitle==='function' && v35PoolTitle()==='Basement Bar League'){
+      const key=v38TeamKey(teamName);
+      return `<img class="v36-exact-card-img v37-static-card-img v38-static-card-img" src="assets/hockeycards/${key}-back.png" alt="${String(teamName||'Team').replace(/"/g,'&quot;')} hockey card back">`;
+    }
+    return '';
+  };
+})();
+</script>
+<style>
+/* v38: basement split card image fitting */
+.v37-static-card-img,.v38-static-card-img{width:100%;height:100%;object-fit:cover;display:block;border-radius:18px;}
+.v36-exact-card-face{padding:0!important;background:#000!important;overflow:hidden!important;}
+.v33-hockey-card{background:#050505!important;}
+</style>
