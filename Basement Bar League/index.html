@@ -3477,5 +3477,135 @@ document.addEventListener("error", function(e){
 })();
 </script>
 
+
+
+<!-- === V27 LIVEWIRE hard reset: independent flip board, old ticker disabled === -->
+<style>
+  /* Hide the old ticker completely. V27 uses its own independent board. */
+  .sports-crawl{display:none!important;height:0!important;min-height:0!important;max-height:0!important;overflow:hidden!important;visibility:hidden!important;pointer-events:none!important;}
+  .v27-livewire{
+    position:sticky;top:0;z-index:92;width:100%;min-height:42px;display:flex;align-items:center;
+    border-top:1px solid rgba(213,157,70,.38);border-bottom:1px solid rgba(213,157,70,.38);
+    background:linear-gradient(90deg,#030303 0%,#151008 42%,#030303 100%);
+    box-shadow:0 8px 20px rgba(0,0,0,.55);overflow:hidden;cursor:pointer;user-select:none;
+  }
+  .v27-brand{
+    align-self:stretch;display:flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:190px;padding:0 13px;
+    background:linear-gradient(180deg,#d9a24d 0%,#8e5b18 100%);color:#050505;
+    font-family:Impact,"Arial Black",sans-serif;font-size:13px;letter-spacing:1.15px;text-transform:uppercase;text-align:center;
+    text-shadow:0 1px rgba(255,255,255,.2);box-shadow:4px 0 14px rgba(0,0,0,.55);
+  }
+  .v27-card{
+    min-width:0;flex:1;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;padding:7px 13px;
+    color:#f7d58b;font-family:monospace;font-weight:900;font-size:12px;letter-spacing:.045em;text-transform:uppercase;
+  }
+  .v27-type{
+    color:#ffe7a8;background:linear-gradient(180deg,#361204,#090605);border:1px solid rgba(255,215,130,.78);border-radius:8px;
+    padding:4px 9px;box-shadow:inset 0 0 11px rgba(255,202,89,.15),0 0 9px rgba(0,0,0,.7);
+    font-family:Impact,"Arial Black",sans-serif;font-size:12px;letter-spacing:1.35px;text-shadow:0 1px 0 #000;white-space:nowrap;
+  }
+  .v27-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 0 #000;}
+  .v27-livewire.v27-pop .v27-card{animation:v27Flip .32s ease both;}
+  @keyframes v27Flip{0%{opacity:.25;transform:rotateX(-65deg) translateY(5px)}100%{opacity:1;transform:rotateX(0deg) translateY(0)}}
+  @media(max-width:760px){
+    .v27-livewire{min-height:44px;}
+    .v27-brand{min-width:112px;max-width:128px;font-size:9.5px;line-height:1.05;letter-spacing:.75px;padding:0 7px;white-space:normal;}
+    .v27-card{grid-template-columns:auto 1fr;gap:7px;padding:6px 8px;font-size:10.2px;letter-spacing:.022em;}
+    .v27-type{font-size:9.3px;letter-spacing:.75px;padding:3px 6px;border-radius:7px;}
+  }
+</style>
+<script>
+(function(){
+  const V27_POOL_NAME='Basement Bar League';
+  const V27_LEAGUE='bbl';
+  let v27Items=[];
+  let v27Index=0;
+  let v27Timer=null;
+  function esc(x){try{if(typeof h==='function')return h(x)}catch(e){}return String(x??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+  function cleanName(n){return String(n||'').replace(/â€™/g,'’').replace(/\s+-\s*\(\s*Bye week\s*\)/i,'').trim();}
+  function ordinal(n){n=Number(n);if(!Number.isFinite(n))return String(n||'');const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+  function textFromHtml(html){const d=document.createElement('div');d.innerHTML=html;return (d.textContent||d.innerText||'').replace(/\s+/g,' ').trim();}
+  function winnerText(){let w=null;try{if(typeof champWinner==='function')w=champWinner();}catch(e){}return `Congrats to ${w?.team||'our winner'}${w?.season?` · ${w.season}`:''}`;}
+  async function buildItems(){
+    const items=[];
+    try{
+      const res=await fetch(`/api/fantrax?league=${encodeURIComponent(V27_LEAGUE)}&endpoint=standings`,{cache:'no-store'});
+      const js=await res.json();
+      const rows=Array.isArray(js.data)?js.data:(Array.isArray(js.data?.data)?js.data.data:[]);
+      rows.slice().sort((a,b)=>(+a.rank||99)-(+b.rank||99)).forEach(r=>{
+        items.push({type:'Standings',text:`${ordinal(r.rank)} · ${cleanName(r.teamName)} · ${r.totalPointsFor ?? '—'} pts`});
+      });
+    }catch(e){items.push({type:'Standings',text:'Live standings loading…'});}
+    try{
+      if(Array.isArray(window.LOCAL_DRAFT_TICKER)&&window.LOCAL_DRAFT_TICKER.length){
+        window.LOCAL_DRAFT_TICKER.slice().sort((a,b)=>(+a.pick||0)-(+b.pick||0)).forEach(p=>items.push({type:'Draft Positions',text:String(p.label||'').replace(/:/,' ·')}));
+      }else if(typeof window.buildDraftTickerItemsV18==='function'){
+        window.buildDraftTickerItemsV18().forEach(x=>{const t=textFromHtml(x).replace(/^Draft Results\s*/i,'').trim(); if(t)items.push({type:'Draft Positions',text:t.replace(/:/,' ·')});});
+      }else if(typeof DRAFT_ORDER!=='undefined'&&Array.isArray(DRAFT_ORDER)){
+        DRAFT_ORDER.slice().sort((a,b)=>(+a.pick||0)-(+b.pick||0)).forEach(p=>items.push({type:'Draft Positions',text:`${ordinal(p.pick)} pick · ${p.drafting}${p.original&&p.original!==p.drafting?` (originally owned by ${p.original})`:''}`}));
+      }
+    }catch(e){}
+    items.push({type:'News',text:winnerText()});
+    items.push({type:'News',text:'Prizes will be given out when the awards are announced.'});
+    items.push({type:'News',text:'New Season Meeting TBA.'});
+    items.push({type:'News',text:'Rule Changes TBA.'});
+    items.push({type:'News',text:'Draft Date TBA.'});
+    return items.filter(x=>x&&x.text);
+  }
+  function ensureBoard(){
+    document.querySelectorAll('.sports-crawl').forEach(x=>{x.style.display='none';x.style.visibility='hidden';x.style.height='0px';});
+    let board=document.getElementById('v27LivewireBoard');
+    if(!board){
+      const img=document.querySelector('.header .final-header-art')||document.querySelector('.final-header-art');
+      if(!img)return null;
+      board=document.createElement('div');
+      board.id='v27LivewireBoard';
+      board.className='v27-livewire';
+      board.setAttribute('role','button');
+      board.setAttribute('tabindex','0');
+      board.title='Tap or click for the next update';
+      board.innerHTML=`<div class="v27-brand">${esc(V27_POOL_NAME)}</div><div class="v27-card"><span class="v27-type">News</span><span class="v27-text">${esc(V27_POOL_NAME)} loading…</span></div>`;
+      img.insertAdjacentElement('afterend',board);
+      board.addEventListener('click',()=>next(true));
+      board.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();next(true);}});
+    }
+    return board;
+  }
+  function render(item){
+    const board=ensureBoard(); if(!board||!item)return;
+    board.querySelector('.v27-brand').textContent=V27_POOL_NAME;
+    board.querySelector('.v27-type').textContent=item.type;
+    board.querySelector('.v27-text').textContent=item.text;
+    board.classList.remove('v27-pop'); void board.offsetWidth; board.classList.add('v27-pop');
+  }
+  function next(manual){
+    if(!v27Items.length)return;
+    v27Index=(v27Index+1)%v27Items.length;
+    render(v27Items[v27Index]);
+    if(manual)restartTimer();
+  }
+  function restartTimer(){
+    if(v27Timer)clearInterval(v27Timer);
+    v27Timer=setInterval(()=>next(false),4200);
+  }
+  async function start(){
+    ensureBoard();
+    v27Items=await buildItems();
+    v27Index=0;
+    render(v27Items[0]||{type:'News',text:`${V27_POOL_NAME} loading…`});
+    restartTimer();
+  }
+  // Neutralize older ticker callbacks without depending on their containers.
+  window.updateTickerV16=window.updateTickerV17=window.updateTickerV18=window.updateTickerV19=window.updateTickerV20=window.updateTickerV21=window.updateTickerV22=window.updateTickerV23=window.updateTickerV24=start;
+  window.updateLivewireFlipV24=start;
+  const oldEnsure=window.ensureTabs;
+  window.ensureTabs=function(){if(typeof oldEnsure==='function')oldEnsure(); setTimeout(start,120);};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(start,250)); else setTimeout(start,250);
+  setTimeout(start,1200); setTimeout(start,3500);
+  setInterval(()=>{ensureBoard();},2000);
+  setInterval(async()=>{v27Items=await buildItems(); if(v27Index>=v27Items.length)v27Index=0;},180000);
+})();
+</script>
+
 </body>
 </html>
