@@ -3459,5 +3459,95 @@ document.addEventListener("error", function(e){
 })();
 </script>
 
+
+
+<!-- === V25 stable LIVEWIRE board: independent from old ticker scripts === -->
+<style>
+  /* Hide/remove all previous scrolling ticker experiments. V25 uses its own independent board. */
+  #sportsCrawl, .sports-crawl{display:none!important;visibility:hidden!important;height:0!important;min-height:0!important;overflow:hidden!important;margin:0!important;padding:0!important;border:0!important;}
+  .livewire-v25{width:100%;box-sizing:border-box;background:linear-gradient(180deg,#15110a,#050505);border-top:1px solid rgba(245,190,91,.45);border-bottom:1px solid rgba(245,190,91,.45);box-shadow:0 10px 22px rgba(0,0,0,.35);min-height:38px;display:flex;align-items:center;position:sticky;top:0;z-index:45;overflow:hidden;}
+  .livewire-v25-inner{width:100%;display:flex;align-items:center;gap:10px;padding:7px 12px;box-sizing:border-box;font-family:monospace;text-transform:uppercase;white-space:nowrap;overflow:hidden;}
+  .livewire-v25-brand{flex:0 0 auto;color:#070707;background:linear-gradient(180deg,#f8d386,#aa6f22);border:1px solid rgba(255,226,159,.65);border-radius:999px;padding:4px 9px;font-family:Impact,"Arial Black",sans-serif;letter-spacing:1.2px;font-size:13px;line-height:1;box-shadow:inset 0 1px rgba(255,255,255,.35),0 0 10px rgba(230,167,64,.16);}
+  .livewire-v25-section{flex:0 0 auto;color:#f9e3a9;border-left:1px solid rgba(245,190,91,.35);padding-left:10px;font-weight:900;letter-spacing:.07em;font-size:12px;}
+  .livewire-v25-text{min-width:0;overflow:hidden;text-overflow:ellipsis;color:#fff3cf;font-weight:850;font-size:12px;letter-spacing:.035em;}
+  .livewire-v25-card{min-width:0;display:flex;align-items:center;gap:10px;width:100%;transform-origin:center center;transition:opacity .22s ease,transform .22s ease;}
+  .livewire-v25-card.is-changing{opacity:.08;transform:rotateX(55deg) translateY(-3px);}
+  @media(max-width:700px){.livewire-v25{min-height:42px;top:0}.livewire-v25-inner{gap:7px;padding:7px 8px}.livewire-v25-brand{font-size:11px;padding:4px 7px}.livewire-v25-section{font-size:10px;padding-left:7px;letter-spacing:.04em}.livewire-v25-text{font-size:10.5px;letter-spacing:.012em;}}
+</style>
+<script>
+(function(){
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const clean = s => String(s||'').replace(/â€™/g,'’').replace(/\s+-\s*\(\s*Bye week\s*\)/i,'').trim();
+  const leagueKey = () => (typeof FANTRAX_LIVE !== 'undefined' && FANTRAX_LIVE.league) ? FANTRAX_LIVE.league : (location.pathname.toLowerCase().includes('forever') ? 'forever' : 'bbl');
+  function ordinal(n){n=Number(n)||0; const v=n%100; if(v>=11&&v<=13)return n+'th'; return n+({1:'st',2:'nd',3:'rd'}[n%10]||'th');}
+  function normalizeDraftLabel(label){
+    let s=String(label||'').replace(/\s+/g,' ').trim();
+    s=s.replace(/^([0-9]+)(st|nd|rd|th)\s+pick:\s*/i,(m,n)=>`${ordinal(n)} pick · `);
+    s=s.replace(/\s*\(originally owned by\s*/i,' (Originally: ');
+    s=s.replace(/\s*\(from\s*/i,' (Originally: ');
+    return s;
+  }
+  async function standingsItems(){
+    try{
+      const res=await fetch(`/api/fantrax?league=${encodeURIComponent(leagueKey())}&endpoint=standings`,{cache:'no-store'});
+      const js=await res.json();
+      const rows=Array.isArray(js.data)?js.data:(Array.isArray(js.data?.data)?js.data.data:[]);
+      return rows.slice().sort((a,b)=>(+a.rank||99)-(+b.rank||99)).map(r=>({section:'Standings',text:`${ordinal(r.rank)} · ${clean(r.teamName)} · ${Number(r.totalPointsFor||0).toLocaleString(undefined,{maximumFractionDigits:2})} pts`}));
+    }catch(e){return [{section:'Standings',text:'Live standings temporarily unavailable'}];}
+  }
+  function draftItems(){
+    const src = Array.isArray(window.LOCAL_DRAFT_TICKER) ? window.LOCAL_DRAFT_TICKER : [];
+    if(src.length){ return src.slice().sort((a,b)=>(+a.pick||0)-(+b.pick||0)).map(p=>({section:'Draft Positions',text:normalizeDraftLabel(p.label || `${ordinal(p.pick)} pick · ${p.team||p.drafting||''}`)})); }
+    if(typeof DRAFT_ORDER!=='undefined' && Array.isArray(DRAFT_ORDER) && DRAFT_ORDER.length){
+      return DRAFT_ORDER.slice().sort((a,b)=>(+a.pick||0)-(+b.pick||0)).map(p=>({section:'Draft Positions',text:`${ordinal(p.pick)} pick · ${p.drafting||p.team||''}${p.original&&p.original!==(p.drafting||p.team)?` (Originally: ${p.original})`:''}`}));
+    }
+    return [{section:'Draft Positions',text:'Draft Date TBA'}];
+  }
+  function newsItems(){
+    let win=null; try{ win = (typeof champWinner==='function') ? champWinner() : null; }catch(e){}
+    return [
+      {section:'News',text:`Congrats to ${win?.team || 'our winner'}${win?.season ? ' · '+win.season : ''}`},
+      {section:'News',text:'Prizes will be given out when the awards are announced'},
+      {section:'News',text:'New Season Meeting TBA'},
+      {section:'News',text:'Rule Changes TBA'},
+      {section:'News',text:'Draft Date TBA'}
+    ];
+  }
+  async function buildItems(){ const st=await standingsItems(); return [...st, ...draftItems(), ...newsItems()]; }
+  function mountShell(){
+    document.querySelectorAll('#sportsCrawl,.sports-crawl').forEach(x=>x.remove());
+    let board=document.getElementById('livewireV25');
+    if(!board){
+      const img=document.querySelector('.header .final-header-art') || document.querySelector('.final-header-art') || document.querySelector('header img') || document.querySelector('.header img');
+      board=document.createElement('div'); board.id='livewireV25'; board.className='livewire-v25';
+      board.innerHTML='<div class="livewire-v25-inner"><div class="livewire-v25-card" id="livewireV25Card"><span class="livewire-v25-brand">LIVEWIRE</span><span class="livewire-v25-section">Loading</span><span class="livewire-v25-text">Livewire warming up…</span></div></div>';
+      if(img && img.parentNode) img.insertAdjacentElement('afterend',board); else document.body.insertAdjacentElement('afterbegin',board);
+    }
+    return board;
+  }
+  let items=[], idx=0, timer=null, refreshTimer=null;
+  function render(item){
+    const card=document.getElementById('livewireV25Card'); if(!card)return;
+    card.classList.add('is-changing');
+    setTimeout(()=>{
+      card.innerHTML=`<span class="livewire-v25-brand">LIVEWIRE</span><span class="livewire-v25-section">${esc(item.section)}</span><span class="livewire-v25-text">${esc(item.text)}</span>`;
+      card.classList.remove('is-changing');
+    },160);
+  }
+  async function start(){
+    mountShell(); items=await buildItems(); idx=0; render(items[0]||{section:'News',text:'Livewire loading…'});
+    if(timer) clearInterval(timer);
+    timer=setInterval(()=>{ if(!items.length) return; idx=(idx+1)%items.length; render(items[idx]); },3000);
+    if(refreshTimer) clearInterval(refreshTimer);
+    refreshTimer=setInterval(async()=>{ items=await buildItems(); if(idx>=items.length)idx=0; },120000);
+  }
+  // Keep old ticker scripts from winning later without touching the rest of the page.
+  setInterval(()=>{ document.querySelectorAll('#sportsCrawl,.sports-crawl').forEach(x=>x.remove()); if(!document.getElementById('livewireV25')) mountShell(); },1000);
+  window.updateTickerV18=window.updateTickerV19=window.updateTickerV20=window.updateTickerV21=window.updateTickerV22=window.updateTickerV23=window.updateLivewireFlipV24=start;
+  window.startLivewireV25=start;
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(start,700)); else setTimeout(start,300);
+})();
+</script>
+
 </body>
 </html>
