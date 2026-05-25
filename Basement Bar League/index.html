@@ -3663,6 +3663,14 @@ document.addEventListener("error", function(e){
   const oldCtrlV28=window.ctrl||ctrl; window.ctrl=ctrl=function(){oldCtrlV28(); const tab=document.getElementById('tabMatchups'); if(tab)tab.classList.toggle('active',view==='matchups'); if(view==='matchups'){['fRowEra','fRow1','fRow2','fRowA'].forEach(id=>{const el=document.getElementById(id); if(el)el.classList.add('hide');});}};
   const oldEnsureV28=window.ensureTabs; window.ensureTabs=function(){if(typeof oldEnsureV28==='function')oldEnsureV28(); addMatchupTabV28();};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{addMatchupTabV28();}); else addMatchupTabV28();
+  // Expose V28 static matchup helpers so the merged V29 Team Comparison page can reuse them across script blocks.
+  window.mhEsc=mhEsc; window.mhNorm=mhNorm; window.mhNum=mhNum; window.mhOrdinal=mhOrdinal;
+  window.mhTeams=mhTeams; window.mhTeamByName=mhTeamByName; window.mhTeamKeys=mhTeamKeys; window.mhCanon=mhCanon;
+  window.mhLoad=mhLoad; window.mhSeasonOptions=mhSeasonOptions; window.mhTeamOptions=mhTeamOptions;
+  window.mhScopeGames=mhScopeGames; window.mhInGame=mhInGame; window.mhPairGames=mhPairGames;
+  window.mhResultFor=mhResultFor; window.mhScoresFor=mhScoresFor; window.mhSummarize=mhSummarize; window.mhGameLabel=mhGameLabel;
+  window.mhSummaryHtml=mhSummaryHtml; window.mhVersusHtml=mhVersusHtml; window.mhGameRows=mhGameRows; window.mhGameTable=mhGameTable;
+  window.mhSeasonBreakdown=mhSeasonBreakdown; window.mhOpponentRanks=mhOpponentRanks; window.mhRivalryRanks=mhRivalryRanks; window.mhSpecialGames=mhSpecialGames;
 })();
 </script>
 
