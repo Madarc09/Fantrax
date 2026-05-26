@@ -3790,6 +3790,10 @@ document.addEventListener("error", function(e){
   function v34Skin(teamName){return ['#e8c4a1','#c8906d','#f0d0ad','#8b5e46','#d6a27d'][v33Hash(teamName)%5];}
   function v34Hair(teamName){return ['#2d1c12','#5b351e','#111','#c29550','#6e4b2a'][(v33Hash(teamName)>>3)%5];}
   function v34StatRows(stats){const rows=[['GP',stats.gp],['W-L-T',`${stats.w}-${stats.l}-${stats.t}`],['FPts For',v29Num(stats.pf)],['FPts Against',v29Num(stats.pa)],['Avg For',v29Num(stats.avg)],['Point Edge',v29Num(stats.edge)],['Best Win Streak',stats.streak||0],['Current Streak',stats.current||'—']]; return rows.map(r=>`<tr><td>${v29Esc(r[0])}</td><td>${v29Esc(r[1])}</td></tr>`).join('');}
+  function v29StreakText(streakObj){
+    if(!streakObj || !streakObj.currentType || !streakObj.currentCount) return '—';
+    return `${streakObj.currentType}${streakObj.currentCount}`;
+  }
   function v34TeamStats(teamName,m,side){if(side==='a')return {gp:m.gp,w:m.w,l:m.l,t:m.t,pf:m.pf,pa:m.pa,avg:m.avgFor,edge:m.diff,streak:(m.streaks&&m.streaks[teamName]?m.streaks[teamName].bestWin:0),current:v29StreakText(m.streaks&&m.streaks[teamName])}; return {gp:m.gp,w:m.l,l:m.w,t:m.t,pf:m.pa,pa:m.pf,avg:m.avgAgainst,edge:-m.diff,streak:(m.streaks&&m.streaks[teamName]?m.streaks[teamName].bestWin:0),current:v29StreakText(m.streaks&&m.streaks[teamName])};}
   function v35PoolTitle(){try{return (typeof FANTRAX_LIVE!=='undefined'&&FANTRAX_LIVE.league==='bbl')?'Basement Bar League':'Forever Pool'}catch(e){return 'Fantrax Pool'}}
   function v35AwardLabels(){return {championship:'League Championships',presidents:'Presidents Trophies',clarence:'Clarence Campbell',wales:'Prince of Wales',hart:'Hart Trophies',norris:'Norris Trophies',vezina:'Vezina Trophies',calder:'Calder Trophies',artross:'Art Ross Trophies',mvfp:'MVFP Awards'};}
