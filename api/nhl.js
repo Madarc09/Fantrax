@@ -12,7 +12,16 @@ const ALLOWED = [
   /^club-schedule-season\/[A-Z]{3}\/now$/,
   /^club-schedule-season\/[A-Z]{3}\/[0-9]{8}$/,
   /^player\/[0-9]+\/landing$/,
-  /^draft\/rankings\/now$/
+  /^draft\/rankings\/now$/,
+  /^standings\/[0-9]{4}-[0-9]{2}-[0-9]{2}$/,
+  /^draft\/picks\/now$/,
+  /^draft-tracker\/picks\/now$/,
+  /^draft\/picks\/[0-9]{4}\/[1-7]$/,
+  /^draft\/picks\/[0-9]{4}\/all$/,
+  /^skater-stats-leaders\/current\?categories=[A-Za-z,]+&limit=-?[0-9]+$/,
+  /^skater-stats-leaders\/[0-9]{8}\/[23]\?categories=[A-Za-z,]+&limit=-?[0-9]+$/,
+  /^goalie-stats-leaders\/current\?categories=[A-Za-z,]+&limit=-?[0-9]+$/,
+  /^goalie-stats-leaders\/[0-9]{8}\/[23]\?categories=[A-Za-z,]+&limit=-?[0-9]+$/,
 ];
 
 export default async function handler(req, res) {
