@@ -25,19 +25,38 @@ function nameFrom(v){
   const l = typeof last === 'object' ? (last.default || last.en || '') : last;
   return [f,l].filter(Boolean).join(' ');
 }
-function posFrom(v, path){
-  const raw = v.position || v.pos || v.positionCode || v.primaryPosition || v.rosterPosition || v.lineupPosition || '';
+function cleanPositionCode(raw) {
   let p = typeof raw === 'object' ? (raw.code || raw.abbrev || raw.name || raw.default || '') : String(raw || '');
   p = p.toUpperCase().replace(/[^A-Z]/g,'');
+  if(p==='LEFTWING'||p==='LWING'||p==='LEFTWINGER') p='LW';
+  if(p==='RIGHTWING'||p==='RWING'||p==='RIGHTWINGER') p='RW';
+  if(p==='CENTER'||p==='CENTRE'||p==='CENTERMAN') p='C';
+  if(p==='DEFENSE'||p==='DEFENCE'||p==='DEFENCEMAN'||p==='DEFENSEMAN') p='D';
+  if(p==='GOALIE'||p==='GOALTENDER') p='G';
+  return p || '';
+}
+function slotFrom(v, path){
+  const direct = v.lineupPosition || v.linePosition || v.positionSlot || v.slot || v.lineupPos || v.forwardPosition || '';
+  let p = cleanPositionCode(direct);
+  const k = path.join('/').toLowerCase();
+  if(!p){
+    if(/left[-_\s]?wing|leftwing|lw/.test(k)) p='LW';
+    else if(/right[-_\s]?wing|rightwing|rw/.test(k)) p='RW';
+    else if(/center|centre|c/.test(k) && !/cap|contract/.test(k)) p='C';
+    else if(/goal/.test(k)) p='G';
+    else if(/defen|defen[cs]e|pair|blue/.test(k)) p='D';
+  }
+  return p || '';
+}
+function posFrom(v, path){
+  const slot = slotFrom(v, path);
+  if(slot) return slot;
+  const raw = v.position || v.pos || v.positionCode || v.primaryPosition || v.rosterPosition || '';
+  let p = cleanPositionCode(raw);
   if(!p){
     const k = path.join('/').toLowerCase();
     if(/goal/.test(k)) p='G'; else if(/defen|pair|blue/.test(k)) p='D'; else if(/forward|line|leftwing|rightwing|center|centre/.test(k)) p='F';
   }
-  if(p==='LEFTWING'||p==='LWING') p='LW';
-  if(p==='RIGHTWING'||p==='RWING') p='RW';
-  if(p==='CENTER'||p==='CENTRE') p='C';
-  if(p==='DEFENSE'||p==='DEFENCEMAN'||p==='DEFENSEMAN') p='D';
-  if(p==='GOALIE'||p==='GOALTENDER') p='G';
   return p || '—';
 }
 function imgFrom(v){
@@ -75,7 +94,7 @@ function collectFromObject(root){
       const name = nameFrom(v);
       const pos = posFrom(v,path);
       const b = bucketFor(path,pos);
-      pushUnique(out[b] || out.other, {name, pos, id:v.id||v.playerId||'', slug:v.slug||v.playerSlug||'', headshot:imgFrom(v), sourceBucket:b});
+      pushUnique(out[b] || out.other, {name, pos, lineupPos:slotFrom(v,path)||'', id:v.id||v.playerId||'', slug:v.slug||v.playerSlug||'', headshot:imgFrom(v), sourceBucket:b});
     }
     Object.keys(v).forEach(k => {
       if(k === 'team' || k === 'league' || k === 'seo') return;
