@@ -166,16 +166,26 @@ function parsePlayerRows(html) {
   let currentSeason = '';
   for (const cells of rows) {
     const joined = cells.join(' ').replace(/\s+/g, ' ').trim();
-    if (/\b(Free Agents|Non-Roster|Reserve Rights|Draft Picks)\b/i.test(joined)) currentSection = '';
+    // Preserve the section so the front-end can do cap accounting instead of treating every non-lineup player as excluded.
+    // CapSpace sections are the closest free source we have for buckets like NHL Roster, LTIR, Non-Roster/buried, etc.
+    if (/\bDraft Picks\b/i.test(joined)) currentSection = 'Draft Picks';
+    if (/\bReserve Rights\b/i.test(joined)) currentSection = 'Reserve Rights';
+    if (/\bFree Agents\b/i.test(joined)) currentSection = 'Free Agents';
+    if (/\bNon-Roster\b/i.test(joined)) currentSection = 'Non-Roster';
     if (/\bOffense\b/i.test(joined)) currentSection = 'Offense';
     if (/\bDefense\b/i.test(joined)) currentSection = 'Defense';
     if (/\bGoaltending\b/i.test(joined)) currentSection = 'Goaltending';
     if (/\bLTIR\b/i.test(joined)) currentSection = 'LTIR';
+    if (/\bInjured Reserve\b/i.test(joined)) currentSection = 'Injured Reserve';
+    if (/\bRetained\b/i.test(joined)) currentSection = 'Retained';
+    if (/\bBuyouts?\b/i.test(joined)) currentSection = 'Buyout';
+    if (/\bBonus Overages?\b/i.test(joined)) currentSection = 'Bonus Overage';
     if (!currentSeason) {
       const seasonMatch = joined.match(/20\d{2}-20\d{2}/);
       if (seasonMatch) currentSeason = seasonMatch[0];
     }
-    if (!currentSection || /^(#|Offense|Defense|Goaltending|LTIR)\b/i.test(joined)) continue;
+    if (!currentSection || /^(#|Offense|Defense|Goaltending|LTIR|Non-Roster|Free Agents|Reserve Rights|Draft Picks|Injured Reserve|Retained|Buyout|Bonus Overage)\b/i.test(joined)) continue;
+    if (/^(Draft Picks|Reserve Rights)$/i.test(currentSection)) continue;
     if (!cells.some(x => /\$[0-9]/.test(x))) continue;
 
     let posIndex = -1;
@@ -196,13 +206,23 @@ function parsePlayerRows(html) {
     const pos = classifyPosition(cells[posIndex]);
     const age = cells[posIndex + 1] && /^\d{1,2}$/.test(cells[posIndex + 1]) ? cells[posIndex + 1] : '';
     const expiresAs = cells[posIndex + 2] && /^(UFA|RFA|10\.2\(c\)|Indefinite)$/i.test(cells[posIndex + 2]) ? cells[posIndex + 2] : '';
+    const allMoney = cells.slice(moneyIndex).flatMap(x => reasonableMoneyTokens(x, MAX_REASONABLE_PLAYER_CAP_HIT));
     const capHitCandidates = reasonableMoneyTokens(cells[moneyIndex], MAX_REASONABLE_PLAYER_CAP_HIT);
     const capHit = capHitCandidates.length ? capHitCandidates[0] : moneyNumber(cells[moneyIndex]);
     if (capHit === null || capHit < 0 || capHit > MAX_REASONABLE_PLAYER_CAP_HIT) {
       ignoredRows.push({ name, pos, value: cells[moneyIndex], reason: 'unrealistic player cap hit' });
       continue;
     }
-    const futureYears = cells.slice(moneyIndex).flatMap(x => reasonableMoneyTokens(x, MAX_REASONABLE_PLAYER_CAP_HIT));
+    const futureYears = allMoney.length ? allMoney : cells.slice(moneyIndex).flatMap(x => reasonableMoneyTokens(x, MAX_REASONABLE_PLAYER_CAP_HIT));
+    const nhlBaseCapHit = allMoney.length > 1 ? allMoney[1] : capHit;
+    const capClass = /LTIR/i.test(currentSection) ? 'ltir'
+      : /Injured/i.test(currentSection) ? 'ir'
+      : /Non-Roster|Minor|Buried/i.test(currentSection) ? 'non-roster'
+      : /Retained/i.test(currentSection) ? 'retained'
+      : /Buyout/i.test(currentSection) ? 'buyout'
+      : /Bonus/i.test(currentSection) ? 'overage'
+      : /Free Agents/i.test(currentSection) ? 'free-agent'
+      : 'nhl-roster';
 
     players.push({
       number,
@@ -211,12 +231,14 @@ function parsePlayerRows(html) {
       pos,
       position: pos,
       section: currentSection,
+      capClass,
       age,
       expiresAs,
       status: currentSection,
       capHit,
-      salary: capHit,
-      aav: capHit,
+      salary: nhlBaseCapHit,
+      aav: nhlBaseCapHit,
+      nhlBaseCapHit,
       currentSeason: currentSeason || 'current',
       years: futureYears,
       source: 'CapSpace public team page'
