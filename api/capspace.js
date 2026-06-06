@@ -2,6 +2,11 @@ const https = require('https');
 
 const CAPSPACE_BASE = 'https://cap-space.com';
 
+// Guardrails for bad/public-source data. NHL max individual cap hit is 20% of the upper limit;
+// this ceiling is deliberately generous so legit future contracts are not filtered out.
+const MAX_REASONABLE_PLAYER_CAP_HIT = 25000000;
+const MAX_REASONABLE_TEAM_CAP_HIT = 150000000;
+
 const TEAM_TO_CODE = {
   'anaheim-ducks':'ana','ana':'ana',
   'boston-bruins':'bos','bos':'bos',
@@ -79,14 +84,31 @@ function cleanText(html) {
     .trim());
 }
 
+
+function moneyTokens(v) {
+  if (v === undefined || v === null) return [];
+  const text = String(v).replace(/&nbsp;/gi, ' ');
+  const matches = text.match(/-?\$\s*\d[\d,]*(?:\.\d+)?/g) || [];
+  return matches.map(x => {
+    const n = Number(String(x).replace(/[^0-9.-]/g, ''));
+    return Number.isFinite(n) ? n : null;
+  }).filter(n => n !== null);
+}
+
 function moneyNumber(v) {
-  if (v === undefined || v === null) return null;
-  const n = Number(String(v).replace(/[^0-9.-]/g, ''));
+  const tokens = moneyTokens(v);
+  if (tokens.length) return tokens[0];
+  const n = Number(String(v || '').replace(/[^0-9.-]/g, ''));
   return Number.isFinite(n) ? n : null;
+}
+
+function reasonableMoneyTokens(v, maxValue) {
+  return moneyTokens(v).filter(n => n >= 0 && n <= maxValue);
 }
 
 function parseSummary(text) {
   const out = {};
+  const ignored = [];
   const patterns = {
     currentCapHit: /Current Cap Hit:\s*(\$[0-9,\.]+)/i,
     projectedCapHit: /Projected Cap Hit:\s*(\$[0-9,\.]+)/i,
@@ -98,8 +120,16 @@ function parseSummary(text) {
   };
   Object.keys(patterns).forEach(k => {
     const m = text.match(patterns[k]);
-    if (m) out[k] = k.includes('Cap') ? moneyNumber(m[1]) : Number(m[1]);
+    if (!m) return;
+    if (k.includes('Cap')) {
+      const value = moneyNumber(m[1]);
+      if (value !== null && Math.abs(value) <= MAX_REASONABLE_TEAM_CAP_HIT) out[k] = value;
+      else ignored.push({ field:k, value:m[1], reason:'unrealistic team cap total' });
+    } else {
+      out[k] = Number(m[1]);
+    }
   });
+  if (ignored.length) out.ignoredValues = ignored;
   return out;
 }
 
@@ -131,18 +161,21 @@ function classifyPosition(value) {
 function parsePlayerRows(html) {
   const rows = getRows(html);
   const players = [];
+  const ignoredRows = [];
   let currentSection = '';
   let currentSeason = '';
   for (const cells of rows) {
     const joined = cells.join(' ').replace(/\s+/g, ' ').trim();
+    if (/\b(Free Agents|Non-Roster|Reserve Rights|Draft Picks)\b/i.test(joined)) currentSection = '';
     if (/\bOffense\b/i.test(joined)) currentSection = 'Offense';
     if (/\bDefense\b/i.test(joined)) currentSection = 'Defense';
     if (/\bGoaltending\b/i.test(joined)) currentSection = 'Goaltending';
+    if (/\bLTIR\b/i.test(joined)) currentSection = 'LTIR';
     if (!currentSeason) {
       const seasonMatch = joined.match(/20\d{2}-20\d{2}/);
       if (seasonMatch) currentSeason = seasonMatch[0];
     }
-    if (!currentSection || /^(#|Offense|Defense|Goaltending)\b/i.test(joined)) continue;
+    if (!currentSection || /^(#|Offense|Defense|Goaltending|LTIR)\b/i.test(joined)) continue;
     if (!cells.some(x => /\$[0-9]/.test(x))) continue;
 
     let posIndex = -1;
@@ -163,8 +196,13 @@ function parsePlayerRows(html) {
     const pos = classifyPosition(cells[posIndex]);
     const age = cells[posIndex + 1] && /^\d{1,2}$/.test(cells[posIndex + 1]) ? cells[posIndex + 1] : '';
     const expiresAs = cells[posIndex + 2] && /^(UFA|RFA|10\.2\(c\)|Indefinite)$/i.test(cells[posIndex + 2]) ? cells[posIndex + 2] : '';
-    const capHit = moneyNumber(cells[moneyIndex]);
-    const futureYears = cells.slice(moneyIndex).filter(x => /\$[0-9]/.test(x));
+    const capHitCandidates = reasonableMoneyTokens(cells[moneyIndex], MAX_REASONABLE_PLAYER_CAP_HIT);
+    const capHit = capHitCandidates.length ? capHitCandidates[0] : moneyNumber(cells[moneyIndex]);
+    if (capHit === null || capHit < 0 || capHit > MAX_REASONABLE_PLAYER_CAP_HIT) {
+      ignoredRows.push({ name, pos, value: cells[moneyIndex], reason: 'unrealistic player cap hit' });
+      continue;
+    }
+    const futureYears = cells.slice(moneyIndex).flatMap(x => reasonableMoneyTokens(x, MAX_REASONABLE_PLAYER_CAP_HIT));
 
     players.push({
       number,
@@ -185,12 +223,14 @@ function parsePlayerRows(html) {
     });
   }
   const seen = new Set();
-  return players.filter(p => {
+  const filtered = players.filter(p => {
     const key = `${p.name}|${p.pos}|${p.capHit}`.toLowerCase();
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
+  filtered.ignoredRows = ignoredRows;
+  return filtered;
 }
 
 module.exports = async function handler(req, res) {
@@ -212,6 +252,7 @@ module.exports = async function handler(req, res) {
     const plain = cleanText(response.body);
     const meta = parseSummary(plain);
     const players = parsePlayerRows(response.body);
+    const ignoredRows = Array.isArray(players.ignoredRows) ? players.ignoredRows : [];
     res.status(200).json({
       ok: true,
       provider: 'CapSpace',
@@ -220,7 +261,15 @@ module.exports = async function handler(req, res) {
       meta,
       data: { players },
       rowsFound: players.length,
-      note: 'Parsed from CapSpace public team page. No paid CapWages API key used.'
+      ignoredRows,
+      guardrails: {
+        maxPlayerCapHit: MAX_REASONABLE_PLAYER_CAP_HIT,
+        maxTeamCapHit: MAX_REASONABLE_TEAM_CAP_HIT,
+        parser: 'splits multiple dollar values in the same HTML cell instead of joining them'
+      },
+      note: ignoredRows.length
+        ? `Parsed from CapSpace public team page. Ignored ${ignoredRows.length} row(s) with impossible salary/cap values. Multi-year money cells are split before parsing. No paid API key used.`
+        : 'Parsed from CapSpace public team page. Multi-year money cells are split before parsing. No paid API key used.'
     });
   } catch (err) {
     res.status(500).json({ ok:false, error: err && err.message ? err.message : String(err), source:url });
