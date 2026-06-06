@@ -24,7 +24,7 @@ const ALLOWED = [
   /^goalie-stats-leaders\/[0-9]{8}\/[23]\?categories=[A-Za-z,]+&limit=-?[0-9]+$/,
 ];
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
