@@ -5184,3 +5184,164 @@ loadFantraxApiPatch();
 })();
 </script>
 
+
+
+<!-- === V57 manager rankings, NHL awards, pool updates === -->
+<style>
+  .v57-manager-mark{width:100%;min-height:72px;border:1px solid rgba(213,157,70,.34);border-radius:14px;background:radial-gradient(circle at 50% 15%,rgba(213,157,70,.18),rgba(0,0,0,.92) 62%);display:flex;align-items:center;justify-content:center;text-align:center;padding:8px 10px;box-sizing:border-box;color:#f5d18a;font-family:Impact,"Arial Black",sans-serif;text-transform:uppercase;letter-spacing:1.8px;font-size:clamp(18px,3vw,31px);line-height:.95;text-shadow:0 3px 0 #000,0 0 12px rgba(213,157,70,.22)}
+  .v57-page{max-width:1180px;margin:14px auto;padding:16px;border:1px solid rgba(213,157,70,.26);border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.78));box-shadow:0 18px 44px rgba(0,0,0,.48),inset 0 0 32px rgba(213,157,70,.05)}
+  .v57-title{font-family:Impact,"Arial Black",sans-serif;text-transform:uppercase;letter-spacing:2px;color:#f0d194;text-shadow:0 2px 2px #000,0 0 14px rgba(213,157,70,.18);font-size:clamp(30px,5vw,56px);line-height:.92;text-align:center;margin-bottom:8px}
+  .v57-note{text-align:center;color:rgba(255,255,255,.66);font-family:monospace;text-transform:uppercase;letter-spacing:1px;font-size:11px;line-height:1.45;margin:0 auto 16px;max-width:950px}
+  .v57-awards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:14px}
+  .v57-award-card,.v57-question-card{border:1px solid rgba(213,157,70,.25);border-radius:16px;background:rgba(0,0,0,.47);padding:13px;box-shadow:inset 0 0 22px rgba(0,0,0,.45)}
+  .v57-award-kicker{font-family:Impact,"Arial Black",sans-serif;text-transform:uppercase;color:#ffd98b;letter-spacing:1px;font-size:20px}.v57-award-winner{font-family:monospace;color:#fff;font-size:15px;font-weight:900;margin-top:7px}.v57-award-team{font-family:monospace;color:rgba(255,255,255,.62);font-size:11px;margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+  .v57-form{display:grid;grid-template-columns:1fr;gap:10px;margin:14px 0}.v57-form input,.v57-form textarea,.v57-form select{width:100%;box-sizing:border-box;border:1px solid rgba(213,157,70,.35);border-radius:12px;background:#070707;color:#f3dfb6;padding:10px 12px;font-family:monospace;font-size:12px}.v57-form textarea{min-height:84px;resize:vertical}.v57-button{border:1px solid rgba(213,157,70,.46);border-radius:12px;background:linear-gradient(180deg,rgba(213,157,70,.25),rgba(0,0,0,.8));color:#ffd98b;padding:10px 12px;font-family:monospace;font-weight:900;text-transform:uppercase;letter-spacing:.08em;cursor:pointer}.v57-button:hover{border-color:rgba(255,220,135,.76)}.v57-option{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;margin:8px 0;color:#f6e0ad;font-family:monospace}.v57-bar{height:10px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}.v57-fill{height:100%;background:linear-gradient(90deg,#8e5b18,#d9a24d);width:0}.v57-small{font-family:monospace;color:rgba(255,255,255,.56);font-size:10px;text-transform:uppercase;letter-spacing:.06em}.v57-admin-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}.v57-empty{border:1px dashed rgba(213,157,70,.32);border-radius:14px;padding:16px;text-align:center;color:rgba(255,255,255,.65);font-family:monospace;text-transform:uppercase;letter-spacing:.07em}.v57-manager-name{font-size:clamp(20px,4vw,36px)}
+  @media(max-width:760px){.v57-admin-row{grid-template-columns:1fr}.v57-page{margin:10px 8px;padding:12px}.v57-option{grid-template-columns:auto 1fr}.v57-option .v57-small{grid-column:2}.v57-title{text-align:left}.v57-note{text-align:left}.v57-manager-mark{min-height:54px;font-size:20px}}
+</style>
+
+<script>
+(function(){
+  const V57_POOL_NAME = "Forever Pool";
+  const V57_HAS_MODERN = false;
+  const V57_AWARDS = [{"award": "Hart Memorial Trophy", "winner": "Nikita Kucherov", "team": "Tampa Bay Lightning", "short": "Hart"}, {"award": "Ted Lindsay Award", "winner": "Connor McDavid", "team": "Edmonton Oilers", "short": "Ted Lindsay"}, {"award": "Art Ross Trophy", "winner": "Connor McDavid", "team": "Edmonton Oilers", "short": "Art Ross"}, {"award": "Maurice \"Rocket\" Richard Trophy", "winner": "Nathan MacKinnon", "team": "Colorado Avalanche", "short": "Rocket Richard"}, {"award": "Vezina Trophy", "winner": "Andrei Vasilevskiy", "team": "Tampa Bay Lightning", "short": "Vezina"}, {"award": "James Norris Memorial Trophy", "winner": "Zach Werenski", "team": "Columbus Blue Jackets", "short": "Norris"}, {"award": "Calder Memorial Trophy", "winner": "Matthew Schaefer", "team": "New York Islanders", "short": "Calder"}, {"award": "Frank J. Selke Trophy", "winner": "Nick Suzuki", "team": "Montreal Canadiens", "short": "Selke"}, {"award": "Lady Byng Memorial Trophy", "winner": "Cole Caufield", "team": "Montreal Canadiens", "short": "Lady Byng"}, {"award": "Jack Adams Award", "winner": "Jon Cooper", "team": "Tampa Bay Lightning", "short": "Jack Adams"}, {"award": "Bill Masterton Memorial Trophy", "winner": "Gabriel Landeskog", "team": "Colorado Avalanche", "short": "Masterton"}, {"award": "Mark Messier NHL Leadership Award", "winner": "Gabriel Landeskog", "team": "Colorado Avalanche", "short": "Messier Leadership"}, {"award": "King Clancy Memorial Trophy", "winner": "Marcus Foligno", "team": "Minnesota Wild", "short": "King Clancy"}];
+  const V57_STORE = 'poolUpdates:v57:' + V57_POOL_NAME.replace(/\s+/g,'-').toLowerCase();
+  let v57Open=null;
+  function esc(x){return String(x??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+  function norm(x){return String(x||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'');}
+  function n(x){const v=Number(x); return Number.isFinite(v)?v:0;}
+  function fmt(x){try{if(typeof window.fmt==='function')return window.fmt(x);}catch(e){}return n(x).toLocaleString(undefined,{maximumFractionDigits:2});}
+  function recText(r){return `${n(r&&r.w)}-${n(r&&r.l)}-${n(r&&r.t)}`;}
+  function recPct(r){const w=n(r&&r.w),l=n(r&&r.l),t=n(r&&r.t),gp=w+l+t;return gp?((w+t*.5)/gp)*100:0;}
+  function pctText(v){return n(v).toFixed(1)+'%';}
+  function seasonLabel(s){try{if(typeof SN!=='undefined'&&SN&&SN[s])return SN[s];}catch(e){} return String(s||'');}
+  function seasonSortValue(s){const m=String(s||'').match(/20\d{2}|\d{2}/); if(!m)return 0; const raw=Number(m[0]); return raw<100?2000+raw:raw;}
+  function modernSeason(s){return seasonSortValue(s)>=2019;}
+  function scopeSeasons(){
+    try{if(V57_HAS_MODERN && era==='modern' && typeof MODERN!=='undefined')return Array.from(MODERN).map(String);}catch(e){}
+    try{if(typeof SEASONS!=='undefined')return Array.from(SEASONS).map(String);}catch(e){}
+    try{if(typeof SEASON_RECORDS!=='undefined')return Array.from(new Set(SEASON_RECORDS.map(r=>String(r.year||r.season))));}catch(e){}
+    return [];
+  }
+  function awardSeasonVariants(v){const s=String(v||''); const out=new Set([s]); const m=s.match(/(20\d{2})/); if(m){const y=Number(m[1]); out.add(String(y)); out.add(`${y}/${String(y+1).slice(-2)}`); out.add(String(y).slice(-2)+'/'+String(y+1).slice(-2));} const m2=s.match(/^(\d{2})$/); if(m2){const y=2000+Number(m2[1]); out.add(String(y)); out.add(`${y}/${String(y+1).slice(-2)}`); out.add(String(y).slice(-2)+'/'+String(y+1).slice(-2));} return Array.from(out);}
+  function teamsList(){try{return Array.isArray(TEAMS)?TEAMS:[];}catch(e){return [];}}
+  function teamName(t){return t&&t.name?String(t.name):'';}
+  function teamByName(name){return teamsList().find(t=>norm(teamName(t))===norm(name))||teamsList().find(t=>norm(teamName(t)).includes(norm(name))||norm(name).includes(norm(teamName(t))));}
+  const FP_MANAGER_BY_TEAM = {
+    // Forever Pool source file does not currently include per-season manager fields; these fall back to franchise names until true manager names are added.
+  };
+  function managerForTeamSeason(t,s){
+    if(!t)return '';
+    if(t.owners){const variants=awardSeasonVariants(s); for(const k of variants){if(t.owners[k])return String(t.owners[k]);}}
+    return FP_MANAGER_BY_TEAM[teamName(t)] || teamName(t);
+  }
+  function rowPointsForTeamSeason(t,s){
+    if(!t)return 0;
+    if(t.seasons && !Array.isArray(t.seasons))return n(t.seasons[s]);
+    if(Array.isArray(t.seasons)){try{const idx=Array.from(SEASONS).map(String).indexOf(String(s)); return idx>=0?n(t.seasons[idx]):0;}catch(e){return 0;}}
+    return 0;
+  }
+  function rowRecordForTeamSeason(t,s){
+    if(!t)return {w:0,l:0,t:0};
+    if(t.records){const variants=awardSeasonVariants(s); for(const k of variants){if(t.records[k])return {w:n(t.records[k].w),l:n(t.records[k].l),t:n(t.records[k].t)};}}
+    try{if(typeof summedRecordForTeam==='function')return summedRecordForTeam(teamName(t),'selected');}catch(e){}
+    return {w:0,l:0,t:0};
+  }
+  function buildManagerRows(){
+    if(V57_POOL_NAME==='Forever Pool')return buildForeverManagerRows();
+    const seasons = season==='all' ? scopeSeasons() : [String(season)];
+    const map = new Map();
+    teamsList().forEach(t=>seasons.forEach(s=>{
+      const pts=rowPointsForTeamSeason(t,s); if(!pts && season!=='all')return;
+      const mgr=managerForTeamSeason(t,s)||'Unknown Manager';
+      if(!map.has(mgr))map.set(mgr,{name:mgr,pts:0,w:0,l:0,t:0,seasons:new Set(),teams:new Set(),latestTeam:''});
+      const o=map.get(mgr), r=rowRecordForTeamSeason(t,s); o.pts+=pts;o.w+=n(r.w);o.l+=n(r.l);o.t+=n(r.t);o.seasons.add(s);o.teams.add(teamName(t)); if(!o.latestTeam||seasonSortValue(s)>=seasonSortValue(o.latestSeason)){o.latestTeam=teamName(t);o.latestSeason=s;}
+    }));
+    return Array.from(map.values()).map(o=>{o.raw = rMode==='record'||rMode==='winpct'?recPct(o):rMode==='plusminus'?(o.w-o.l):o.pts; o.main=rMode==='record'?recText(o):rMode==='winpct'?pctText(recPct(o)):rMode==='plusminus'?((o.w-o.l)>=0?'+':'')+(o.w-o.l):fmt(o.pts); o.label=rMode==='record'?'Record':rMode==='winpct'?'Win %':rMode==='plusminus'?'+/-':'PTS'; o.sub=(season==='all'?(era==='modern'?'Modern Era':'All Time'):seasonLabel(season))+' · Manager Ranking'; return o;}).sort((a,b)=>b.raw-a.raw || b.pts-a.pts || a.name.localeCompare(b.name));
+  }
+  function buildForeverManagerRows(){
+    const rows=[];
+    try{
+      const source = (typeof SEASON_RECORDS!=='undefined'&&Array.isArray(SEASON_RECORDS)) ? SEASON_RECORDS : [];
+      if(source.length){
+        const wanted = season==='all' ? null : String(season);
+        const map=new Map();
+        source.forEach(r=>{const key=String(r.year||r.season); if(wanted && key!==wanted)return; const franchise=r.franchise||r.name||r.team; const mgr=FP_MANAGER_BY_TEAM[franchise]||franchise; if(!map.has(mgr))map.set(mgr,{name:mgr,pts:0,w:0,l:0,t:0,seasons:new Set(),teams:new Set(),latestTeam:franchise}); const o=map.get(mgr); o.pts+=n(r.fpts||r.points);o.w+=n(r.w);o.l+=n(r.l);o.t+=n(r.t);o.seasons.add(key);o.teams.add(franchise); if(seasonSortValue(key)>=seasonSortValue(o.latestSeason)){o.latestSeason=key;o.latestTeam=franchise;}});
+        return Array.from(map.values()).map(o=>{o.raw=rMode==='record'||rMode==='winpct'?recPct(o):rMode==='plusminus'?(o.w-o.l):o.pts;o.main=rMode==='record'?recText(o):rMode==='winpct'?pctText(recPct(o)):rMode==='plusminus'?((o.w-o.l)>=0?'+':'')+(o.w-o.l):fmt(o.pts);o.label=rMode==='record'?'Record':rMode==='winpct'?'Win %':rMode==='plusminus'?'+/-':'PTS';o.sub=(season==='all'?'All Time':seasonLabel(season))+' · Manager Ranking';return o;}).sort((a,b)=>b.raw-a.raw||b.pts-a.pts||a.name.localeCompare(b.name));
+      }
+    }catch(e){}
+    return teamsList().map(t=>{const name=FP_MANAGER_BY_TEAM[teamName(t)]||teamName(t); const pts=season==='all'?n(t.pts):rowPointsForTeamSeason(t,season); return {name,pts,w:0,l:0,t:0,teams:new Set([teamName(t)]),latestTeam:teamName(t),raw:pts,main:fmt(pts),label:'PTS',sub:(season==='all'?'All Time':seasonLabel(season))+' · Manager Ranking'};}).sort((a,b)=>b.raw-a.raw);
+  }
+  const awardLabels={championship:'Championships',presidents:'Presidents Trophy',clarence:'Clarence Campbell',wales:'Prince of Wales',hart:'Hart',norris:'Norris',artross:'Art Ross',vezina:'Vezina',mvfp:'MVFP',calder:'Calder'};
+  const awardKeys=['championship','presidents','clarence','wales','hart','norris','artross','vezina','mvfp','calder'];
+  function managerAwards(manager){
+    const out=[];
+    try{Object.keys(AWARDS||{}).forEach(team=>{const t=teamByName(team)||{name:team}; const aw=AWARDS[team]||{}; awardKeys.forEach(k=>(aw[k]||[]).forEach(w=>{const sy=w.season||w.year||''; if(V57_HAS_MODERN && era==='modern' && !modernSeason(sy))return; const mgr=managerForTeamSeason(t,sy); if(norm(mgr)===norm(manager)){out.push({key:k,label:awardLabels[k]||k,season:sy,player:w.player||'',team:team});}}));});}catch(e){}
+    return out.sort((a,b)=>seasonSortValue(b.season)-seasonSortValue(a.season));
+  }
+  function trophyHtmlForManager(manager){const arr=managerAwards(manager); if(!arr.length)return '<div class="v16-award-empty">No trophy case items listed.</div>'; return arr.map(a=>`<span class="v16-award-pill"><b>${esc(a.label)}</b>${a.season?` ${esc(a.season)}`:''}${a.player?` · ${esc(a.player)}`:''}${a.team?` · ${esc(a.team)}`:''}</span>`).join('');}
+  function managerDrop(o){const pm=o.w-o.l; const rec=`<div class="rec-strip"><div class="rec-cell"><div class="rec-val">${o.w||0}</div><div class="rec-lbl">Wins</div></div><div class="rec-cell"><div class="rec-val">${o.l||0}</div><div class="rec-lbl">Losses</div></div><div class="rec-cell"><div class="rec-val">${o.t||0}</div><div class="rec-lbl">Ties</div></div><div class="rec-cell"><div class="rec-val">${pctText(recPct(o))}</div><div class="rec-lbl">Win %</div></div><div class="rec-cell"><div class="rec-val">${pm>=0?'+':''}${pm}</div><div class="rec-lbl">+/-</div></div></div>`; const teams=Array.from(o.teams||[]).filter(Boolean).join(' → '); return rec+`<div class="drop-section">Manager Trophy Case</div><div class="v16-trophy-list">${trophyHtmlForManager(o.name)}</div>${teams?`<div class="hist">Managed team history: ${esc(teams)}</div>`:''}`;}
+  function buildManagerRankingsPage(){const rows=buildManagerRows(); if(!rows.length)return '<div class="v57-page"><div class="v57-title">Rank By Manager</div><div class="v57-empty">No manager ranking data found.</div></div>'; return rows.map((o,i)=>{const open=v57Open===i; return `<div><div class="row${open?' open':''}" onclick="window.v57ToggleManager(${i})"><div class="r-rank${i===1?' s2':i===2?' s3':''}">${i+1}</div><div class="r-tag"><div class="v57-manager-mark"><span class="v57-manager-name">${esc(o.name)}</span></div></div><div class="r-info"><div class="r-sub">${esc(o.sub)}</div>${o.latestTeam?`<div class="r-owner">Current / latest team: ${esc(o.latestTeam)}</div>`:''}</div><div class="r-cups">${managerAwards(o.name).filter(a=>a.key==='championship').length?managerAwards(o.name).filter(a=>a.key==='championship').map(a=>'<span class="row-award row-award-championship"><span class="row-award-label">CUP</span></span>').join(''):'<span class="no-cup">—</span>'}</div><div class="r-pts"><div class="r-pts-val">${esc(o.main)}</div><div class="r-pts-lbl">${esc(o.label)}</div></div><div class="r-chev">⌄</div></div><div class="drop${open?' open':''}">${open?managerDrop(o):''}</div></div>`;}).join('');}
+  window.v57ToggleManager=function(i){v57Open=v57Open===i?null:i; render();};
+  function awardItems(){return V57_AWARDS.slice();}
+  async function fetchAwards(){try{const res=await fetch('/api/nhl-awards',{cache:'no-store'}); if(!res.ok)throw new Error('bad status'); const js=await res.json(); if(Array.isArray(js.data)&&js.data.length)return js.data;}catch(e){} return awardItems();}
+  window.v57FetchAwards=fetchAwards;
+  function buildNhlAwardsPage(){const cards=awardItems().map(a=>`<article class="v57-award-card"><div class="v57-award-kicker">${esc(a.short||a.award)}</div><div class="v57-award-winner">${esc(a.winner)}</div><div class="v57-award-team">${esc(a.team||'')} · ${esc(a.award)}</div></article>`).join(''); return `<div class="v57-page"><div class="v57-title">2026 NHL Awards</div><div class="v57-note">Seeded from the same awards endpoint the ticker uses. When a true live NHL awards API/source is swapped in, this page updates from that one source.</div><div class="v57-awards-grid">${cards}</div></div>`;}
+  function loadUpdates(){try{return JSON.parse(localStorage.getItem(V57_STORE)||'[]');}catch(e){return [];}}
+  function saveUpdates(q){localStorage.setItem(V57_STORE,JSON.stringify(q));}
+  function defaultUpdates(){let q=loadUpdates(); if(!q.length){q=[{id:'q_'+Date.now(),question:'Should we use NHL award winners on the ticker all offseason?',options:['Yes','No','Only until draft day'],votes:{}}];saveUpdates(q);} return q;}
+  function buildPoolUpdatesPage(){const q=defaultUpdates(); return `<div class="v57-page"><div class="v57-title">Pool Updates</div><div class="v57-note">Admin can add vote questions here. This first version enforces one vote per voter name in this browser storage and lets that voter change their vote. A server/database can make it truly cross-device later.</div><div class="v57-form"><input id="v57Voter" placeholder="Your manager name"><div class="v57-admin-row"><textarea id="v57Question" placeholder="Admin: type a new question"></textarea><button class="v57-button" onclick="v57AddQuestion()">Add Question</button></div><input id="v57Options" placeholder="Options separated by commas, ex: Yes, No, Maybe"></div><div id="v57Questions">${q.map(questionCard).join('')}</div></div>`;}
+  function questionCard(q){const totals={}; (q.options||[]).forEach(o=>totals[o]=0); Object.values(q.votes||{}).forEach(v=>{if(totals[v]!=null)totals[v]++;}); const total=Object.values(totals).reduce((a,b)=>a+b,0); const opts=(q.options||[]).map(o=>{const count=totals[o]||0,p=total?Math.round(count/total*100):0; return `<label class="v57-option"><input type="radio" name="v57_${esc(q.id)}" value="${esc(o)}"><span>${esc(o)}</span><span class="v57-small">${count} vote${count===1?'':'s'} · ${p}%</span><span class="v57-bar"><span class="v57-fill" style="width:${p}%"></span></span></label>`;}).join(''); return `<article class="v57-question-card"><div class="v57-award-kicker">${esc(q.question)}</div><div class="v57-small">${total} total vote${total===1?'':'s'}</div>${opts}<button class="v57-button" onclick="v57SubmitVote('${esc(q.id)}')">Submit / Change Vote</button></article>`;}
+  window.v57AddQuestion=function(){const qtxt=document.getElementById('v57Question')?.value.trim(); const opts=(document.getElementById('v57Options')?.value||'').split(',').map(x=>x.trim()).filter(Boolean); if(!qtxt||opts.length<2){alert('Add a question and at least two comma-separated options.');return;} const qs=loadUpdates(); qs.unshift({id:'q_'+Date.now(),question:qtxt,options:opts,votes:{}}); saveUpdates(qs); render();};
+  window.v57SubmitVote=function(id){const voter=(document.getElementById('v57Voter')?.value||'').trim(); if(!voter){alert('Type your manager name first.');return;} const selected=document.querySelector(`input[name="v57_${CSS.escape(id)}"]:checked`); if(!selected){alert('Pick an option first.');return;} const qs=loadUpdates(); const q=qs.find(x=>x.id===id); if(!q)return; q.votes=q.votes||{}; q.votes[voter]=selected.value; saveUpdates(qs); render();};
+  function addTabs(){const tabs=document.querySelector('.tabs'); if(!tabs)return; if(!document.getElementById('tabManagerRank')){const b=document.createElement('button'); b.className='tab'; b.id='tabManagerRank'; b.textContent='Rank By Manager'; b.onclick=()=>setView('managerrankings'); const after=document.getElementById('tabR'); after&&after.parentNode?after.parentNode.insertBefore(b,after.nextSibling):tabs.appendChild(b);} if(!document.getElementById('tabNhlAwards')){const b=document.createElement('button'); b.className='tab'; b.id='tabNhlAwards'; b.textContent='NHL Awards'; b.onclick=()=>setView('nhlawards'); const after=document.getElementById('tabA')||tabs.lastElementChild; after&&after.parentNode?after.parentNode.insertBefore(b,after.nextSibling):tabs.appendChild(b);} if(!document.getElementById('tabPoolUpdates')){const b=document.createElement('button'); b.className='tab'; b.id='tabPoolUpdates'; b.textContent='Pool Updates'; b.onclick=()=>setView('poolupdates'); tabs.appendChild(b);}}
+  const oldRender=window.render||render; window.render=render=function(){ if(view==='managerrankings'){document.getElementById('board').innerHTML=buildManagerRankingsPage();return;} if(view==='nhlawards'){document.getElementById('board').innerHTML=buildNhlAwardsPage();return;} if(view==='poolupdates'){document.getElementById('board').innerHTML=buildPoolUpdatesPage();return;} return oldRender(); };
+  const oldCtrl=window.ctrl||ctrl; window.ctrl=ctrl=function(){oldCtrl(); addTabs(); const mgr=document.getElementById('tabManagerRank'); if(mgr)mgr.classList.toggle('active',view==='managerrankings'); const nhl=document.getElementById('tabNhlAwards'); if(nhl)nhl.classList.toggle('active',view==='nhlawards'); const upd=document.getElementById('tabPoolUpdates'); if(upd)upd.classList.toggle('active',view==='poolupdates'); if(view==='managerrankings'){const f1=document.getElementById('fRow1'),f2=document.getElementById('fRow2'),fa=document.getElementById('fRowA'),fe=document.getElementById('fRowEra'); if(f1)f1.classList.remove('hide'); if(f2)f2.classList.remove('hide'); if(fa)fa.classList.add('hide'); if(fe)fe.classList.toggle('hide',!V57_HAS_MODERN);} if(view==='nhlawards'||view==='poolupdates'){['fRowEra','fRow1','fRow2','fRowA'].forEach(id=>{const el=document.getElementById(id); if(el)el.classList.add('hide');});}};
+  const oldSetView=window.setView||setView; window.setView=function(v){ if(['managerrankings','nhlawards','poolupdates'].includes(v)){view=v;openIdx=null;v57Open=null;rMode=null;season='all';ctrl();render();return;} oldSetView(v);};
+  const oldEnsure=window.ensureTabs; window.ensureTabs=function(){if(typeof oldEnsure==='function')oldEnsure(); addTabs();};
+  async function v57AwardTickerItems(){const arr=await fetchAwards(); return arr.map(a=>({type:'NHL Awards',text:`${a.short||a.award}: ${a.winner}${a.team?` · ${a.team}`:''}`}));}
+  window.v57AwardTickerItems=v57AwardTickerItems;
+  const oldUpdateLivewire=window.updateLivewireFlipV24;
+  // Override the final V27 livewire builder by replacing its rendered items after it starts.
+  async function mountAwardOnlyTicker(){
+    const board=document.getElementById('v27LivewireBoard');
+    const items=await v57AwardTickerItems();
+    if(!board||!items.length)return;
+    let idx=0;
+    const brand=board.querySelector('.v27-brand'), type=board.querySelector('.v27-type'), text=board.querySelector('.v27-text');
+    if(brand)brand.textContent=V57_POOL_NAME;
+    function show(){const it=items[idx%items.length]; if(type)type.textContent=it.type; if(text)text.textContent=it.text; board.classList.remove('v27-pop'); void board.offsetWidth; board.classList.add('v27-pop'); idx++;}
+    show();
+    if(window.v57TickerTimer)clearInterval(window.v57TickerTimer);
+    window.v57TickerTimer=setInterval(show,4200);
+    board.onclick=function(){show();};
+  }
+  const priorUpdateTicker=window.updateTickerV24||window.updateLivewireFlipV24;
+  window.updateTickerV24=window.updateLivewireFlipV24=function(){ if(typeof priorUpdateTicker==='function') priorUpdateTicker(); setTimeout(mountAwardOnlyTicker,550); };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{addTabs(); setTimeout(mountAwardOnlyTicker,1200);}); else {addTabs(); setTimeout(mountAwardOnlyTicker,1200);} setTimeout(()=>{try{ctrl();}catch(e){}},600);
+})();
+</script>
+
+
+
+<!-- === V57B NHL awards-only ticker hard override === -->
+<style>
+  #v27LivewireBoard,.sports-crawl{display:none!important;visibility:hidden!important;height:0!important;min-height:0!important;max-height:0!important;overflow:hidden!important;pointer-events:none!important;}
+  .v57b-awards-wire{position:sticky;top:0;z-index:96;width:100%;min-height:42px;display:flex;align-items:center;border-top:1px solid rgba(213,157,70,.38);border-bottom:1px solid rgba(213,157,70,.38);background:linear-gradient(90deg,#030303 0%,#151008 42%,#030303 100%);box-shadow:0 8px 20px rgba(0,0,0,.55);overflow:hidden;cursor:pointer;user-select:none}.v57b-brand{align-self:stretch;display:flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:190px;padding:0 13px;background:linear-gradient(180deg,#d9a24d 0%,#8e5b18 100%);color:#050505;font-family:Impact,"Arial Black",sans-serif;font-size:13px;letter-spacing:1.15px;text-transform:uppercase;text-align:center;text-shadow:0 1px rgba(255,255,255,.2);box-shadow:4px 0 14px rgba(0,0,0,.55)}.v57b-card{min-width:0;flex:1;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;padding:7px 13px;color:#f7d58b;font-family:monospace;font-weight:900;font-size:12px;letter-spacing:.045em;text-transform:uppercase}.v57b-type{color:#ffe7a8;background:linear-gradient(180deg,#361204,#090605);border:1px solid rgba(255,215,130,.78);border-radius:8px;padding:4px 9px;box-shadow:inset 0 0 11px rgba(255,202,89,.15),0 0 9px rgba(0,0,0,.7);font-family:Impact,"Arial Black",sans-serif;font-size:12px;letter-spacing:1.35px;text-shadow:0 1px 0 #000;white-space:nowrap}.v57b-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 0 #000}.v57b-awards-wire.v57b-pop .v57b-card{animation:v57bFlip .32s ease both}@keyframes v57bFlip{0%{opacity:.25;transform:rotateX(-65deg) translateY(5px)}100%{opacity:1;transform:rotateX(0deg) translateY(0)}}@media(max-width:760px){.v57b-awards-wire{min-height:44px}.v57b-brand{min-width:112px;max-width:128px;font-size:9.5px;line-height:1.05;letter-spacing:.75px;padding:0 7px;white-space:normal}.v57b-card{grid-template-columns:auto 1fr;gap:7px;padding:6px 8px;font-size:10.2px;letter-spacing:.022em}.v57b-type{font-size:9.3px;letter-spacing:.75px;padding:3px 6px;border-radius:7px}}
+</style>
+<script>
+(function(){
+  const POOL="Forever Pool";
+  const FALLBACK=[{"award": "Hart Memorial Trophy", "winner": "Nikita Kucherov", "team": "Tampa Bay Lightning", "short": "Hart"}, {"award": "Ted Lindsay Award", "winner": "Connor McDavid", "team": "Edmonton Oilers", "short": "Ted Lindsay"}, {"award": "Art Ross Trophy", "winner": "Connor McDavid", "team": "Edmonton Oilers", "short": "Art Ross"}, {"award": "Maurice \"Rocket\" Richard Trophy", "winner": "Nathan MacKinnon", "team": "Colorado Avalanche", "short": "Rocket Richard"}, {"award": "Vezina Trophy", "winner": "Andrei Vasilevskiy", "team": "Tampa Bay Lightning", "short": "Vezina"}, {"award": "James Norris Memorial Trophy", "winner": "Zach Werenski", "team": "Columbus Blue Jackets", "short": "Norris"}, {"award": "Calder Memorial Trophy", "winner": "Matthew Schaefer", "team": "New York Islanders", "short": "Calder"}, {"award": "Frank J. Selke Trophy", "winner": "Nick Suzuki", "team": "Montreal Canadiens", "short": "Selke"}, {"award": "Lady Byng Memorial Trophy", "winner": "Cole Caufield", "team": "Montreal Canadiens", "short": "Lady Byng"}, {"award": "Jack Adams Award", "winner": "Jon Cooper", "team": "Tampa Bay Lightning", "short": "Jack Adams"}, {"award": "Bill Masterton Memorial Trophy", "winner": "Gabriel Landeskog", "team": "Colorado Avalanche", "short": "Masterton"}, {"award": "Mark Messier NHL Leadership Award", "winner": "Gabriel Landeskog", "team": "Colorado Avalanche", "short": "Messier Leadership"}, {"award": "King Clancy Memorial Trophy", "winner": "Marcus Foligno", "team": "Minnesota Wild", "short": "King Clancy"}];
+  let items=FALLBACK.map(a=>({type:'NHL Awards',text:`${a.short||a.award}: ${a.winner}${a.team?` · ${a.team}`:''}`}));
+  let idx=0, timer=null;
+  function esc(x){return String(x??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+  async function load(){try{const r=await fetch('/api/nhl-awards',{cache:'no-store'}); const j=await r.json(); if(Array.isArray(j.data)&&j.data.length)items=j.data.map(a=>({type:'NHL Awards',text:`${a.short||a.award}: ${a.winner}${a.team?` · ${a.team}`:''}`}));}catch(e){}}
+  function ensure(){document.querySelectorAll('#v27LivewireBoard,.sports-crawl').forEach(x=>{x.style.display='none';x.style.visibility='hidden';x.style.height='0px';}); let b=document.getElementById('v57bAwardsWire'); if(!b){const img=document.querySelector('.header .final-header-art')||document.querySelector('.final-header-art'); if(!img)return null; b=document.createElement('div'); b.id='v57bAwardsWire'; b.className='v57b-awards-wire'; b.tabIndex=0; b.title='Tap or click for next NHL award'; b.innerHTML=`<div class="v57b-brand">${esc(POOL)}</div><div class="v57b-card"><span class="v57b-type">NHL Awards</span><span class="v57b-text">Loading 2026 NHL award winners…</span></div>`; img.insertAdjacentElement('afterend',b); b.addEventListener('click',()=>show(true)); b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show(true);}});} return b;}
+  function show(manual){const b=ensure(); if(!b||!items.length)return; const it=items[idx%items.length]; idx++; const type=b.querySelector('.v57b-type'), txt=b.querySelector('.v57b-text'); if(type)type.textContent=it.type; if(txt)txt.textContent=it.text; b.classList.remove('v57b-pop'); void b.offsetWidth; b.classList.add('v57b-pop'); if(manual)restart();}
+  function restart(){if(timer)clearInterval(timer); timer=setInterval(()=>show(false),4200);}
+  async function start(){ensure(); await load(); show(false); restart();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(start,500)); else setTimeout(start,500);
+  setInterval(ensure,1500); setInterval(load,300000);
+})();
+</script>
+
