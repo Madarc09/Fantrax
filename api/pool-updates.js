@@ -1,6 +1,9 @@
 // Shared Pool Updates voting API.
-// Requires Upstash Redis REST environment variables on Vercel:
-// UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+// Requires Redis REST environment variables on Vercel.
+// Supports either the newer Upstash names:
+//   UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+// or the older Vercel KV names:
+//   KV_REST_API_URL and KV_REST_API_TOKEN
 
 const DEFAULT_QUESTIONS = {
   bbl: [
@@ -38,12 +41,59 @@ function redisKey(pool) {
   return `fantrax:pool-updates:${pool}:v1`;
 }
 
+function getRedisEnv() {
+  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const kvUrl = process.env.KV_REST_API_URL;
+  const kvToken = process.env.KV_REST_API_TOKEN;
+  const url = upstashUrl || kvUrl;
+  const token = upstashToken || kvToken;
+  return {
+    url,
+    token,
+    urlSource: upstashUrl ? 'UPSTASH_REDIS_REST_URL' : (kvUrl ? 'KV_REST_API_URL' : null),
+    tokenSource: upstashToken ? 'UPSTASH_REDIS_REST_TOKEN' : (kvToken ? 'KV_REST_API_TOKEN' : null),
+    hasUpstashUrl: Boolean(upstashUrl),
+    hasUpstashToken: Boolean(upstashToken),
+    hasKvUrl: Boolean(kvUrl),
+    hasKvToken: Boolean(kvToken)
+  };
+}
+
+
+function publicRedisEnvCheck(env) {
+  const source = env || getRedisEnv();
+  return {
+    urlSource: source.urlSource,
+    tokenSource: source.tokenSource,
+    hasUpstashUrl: Boolean(source.hasUpstashUrl),
+    hasUpstashToken: Boolean(source.hasUpstashToken),
+    hasKvUrl: Boolean(source.hasKvUrl),
+    hasKvToken: Boolean(source.hasKvToken)
+  };
+}
+
+function looksLikeRedisRestUrl(value) {
+  return /^https:\/\/[^\s]+\.upstash\.io\/?$/i.test(String(value || '').trim()) || /^https:\/\/[^\s]+\.upstash\.io\//i.test(String(value || '').trim());
+}
+
 async function redisCommand(command) {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const env = getRedisEnv();
+  const url = env.url;
+  const token = env.token;
   if (!url || !token) {
-    const err = new Error('Shared voting storage is not configured. Add UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Vercel.');
+    const missing = [];
+    if (!url) missing.push('REST URL');
+    if (!token) missing.push('REST TOKEN');
+    const err = new Error(`Shared voting storage is not configured. Missing ${missing.join(' and ')}. Add either UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN or KV_REST_API_URL/KV_REST_API_TOKEN in Vercel, then redeploy.`);
     err.code = 'NO_STORAGE';
+    err.details = env;
+    throw err;
+  }
+  if (!looksLikeRedisRestUrl(url)) {
+    const err = new Error(`Shared voting storage URL does not look like an Upstash Redis REST URL. Check the value saved in ${env.urlSource || 'the REST URL variable'}. It should start with https:// and include upstash.io.`);
+    err.code = 'BAD_STORAGE_URL';
+    err.details = env;
     throw err;
   }
   const response = await fetch(url, {
@@ -151,8 +201,15 @@ module.exports = async function handler(req, res) {
 
     return res.status(400).json({ ok: false, error: 'Unknown action.' });
   } catch (err) {
-    if (err && err.code === 'NO_STORAGE') {
-      return res.status(503).json({ ok: false, shared: false, pool, error: err.message, questions: DEFAULT_QUESTIONS[pool] || [] });
+    if (err && (err.code === 'NO_STORAGE' || err.code === 'BAD_STORAGE_URL')) {
+      return res.status(503).json({
+        ok: false,
+        shared: false,
+        pool,
+        error: err.message,
+        envCheck: publicRedisEnvCheck(err.details),
+        questions: DEFAULT_QUESTIONS[pool] || []
+      });
     }
     return res.status(500).json({ ok: false, error: err.message || String(err) });
   }

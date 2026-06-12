@@ -34,3 +34,21 @@ Fast setup:
 4. Redeploy.
 
 Without those variables, the API will warn that shared storage is not configured and will not save league-wide questions/votes.
+
+V60 STORAGE ENV FALLBACK UPDATE
+-------------------------------
+The Pool Updates API now accepts either variable naming style:
+
+Option A, Upstash names:
+  UPSTASH_REDIS_REST_URL
+  UPSTASH_REDIS_REST_TOKEN
+
+Option B, Vercel KV names:
+  KV_REST_API_URL
+  KV_REST_API_TOKEN
+
+You do NOT need all five variables from the older Vercel KV integration for this feature. The read-only token is not used because Pool Updates must write new questions and votes.
+
+If Vercel auto-populates a value while you are adding the variable, make sure the saved value is the actual Redis REST URL/token, not just an auto-suggested variable name or placeholder. The REST URL should start with https:// and include upstash.io.
+
+After adding or editing variables, redeploy the project again. Old deployments do not receive newly added environment variables.
