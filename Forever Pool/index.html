@@ -5472,3 +5472,119 @@ loadFantraxApiPatch();
   function boot(){setTimeout(hardAwardTicker,250);setTimeout(hardAwardTicker,1200);setTimeout(()=>{if(typeof view!=='undefined'&&view==='poolupdates')loadShared(true);},300);} if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
+
+
+<!-- === V61 Forever Pool awards/prize-board update: user-provided 2026 pool winners === -->
+<style>
+  .v61-awards-page{max-width:1180px;margin:16px auto 28px;padding:18px;border:1px solid rgba(213,157,70,.28);border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(0,0,0,.76));box-shadow:0 18px 45px rgba(0,0,0,.45),inset 0 0 34px rgba(213,157,70,.05)}
+  .v61-awards-title{font-family:Impact,"Arial Black",sans-serif;text-transform:uppercase;letter-spacing:2px;color:#f4d58c;text-shadow:0 3px 3px #000,0 0 18px rgba(213,157,70,.22);font-size:clamp(28px,5vw,54px);text-align:center;line-height:.95;margin:4px 0 8px}
+  .v61-awards-note{font-family:monospace;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.65);font-size:11px;text-align:center;margin:0 auto 16px;max-width:850px;line-height:1.55}
+  .v61-awards-section-title{font-family:Impact,"Arial Black",sans-serif;text-transform:uppercase;letter-spacing:1.6px;color:#fff;font-size:clamp(19px,3vw,28px);margin:22px 0 10px;padding-bottom:7px;border-bottom:1px solid rgba(213,157,70,.24);text-shadow:0 2px 2px #000}
+  .v61-awards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+  .v61-award-card{border:1px solid rgba(213,157,70,.28);border-radius:16px;background:radial-gradient(circle at top,rgba(213,157,70,.16),rgba(0,0,0,.64) 54%,rgba(0,0,0,.82));padding:13px;min-height:160px;box-shadow:0 12px 26px rgba(0,0,0,.38);position:relative;overflow:hidden}
+  .v61-award-card:before{content:"";position:absolute;inset:-40% -20% auto -20%;height:92px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transform:rotate(-8deg)}
+  .v61-award-kicker{font-family:monospace;text-transform:uppercase;letter-spacing:1px;color:#d59d46;font-size:10px;font-weight:900;margin-bottom:7px}
+  .v61-award-name{font-family:Impact,"Arial Black",sans-serif;text-transform:uppercase;letter-spacing:.9px;color:#fff;font-size:24px;line-height:1;text-shadow:0 2px 2px #000;margin-bottom:8px}
+  .v61-award-player{font-weight:900;color:#f6d98d;font-size:15px;line-height:1.25;margin-bottom:9px;text-shadow:0 2px 2px #000}
+  .v61-award-money{display:inline-block;border:1px solid rgba(213,157,70,.35);border-radius:999px;padding:4px 8px;color:#fff;background:rgba(213,157,70,.14);font-family:monospace;font-size:11px;font-weight:900;margin-bottom:10px}
+  .v61-team-chip{display:flex;align-items:center;gap:10px;margin-top:8px;border-top:1px solid rgba(213,157,70,.18);padding-top:10px;min-height:48px}
+  .v61-team-chip img{width:74px;max-height:42px;object-fit:contain;filter:drop-shadow(0 5px 8px rgba(0,0,0,.65))}
+  .v61-team-chip span{font-family:monospace;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.82);font-size:11px;font-weight:900;line-height:1.25}
+  .v61-finance{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+  .v61-finance div{border:1px solid rgba(213,157,70,.22);border-radius:12px;background:rgba(0,0,0,.38);padding:10px;text-align:center;font-family:monospace;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.72);font-size:10px}
+  .v61-finance b{display:block;color:#f6d98d;font-size:17px;margin-top:4px;letter-spacing:0;text-transform:none}
+  @media(max-width:720px){.v61-awards-page{padding:13px}.v61-awards-grid{grid-template-columns:1fr}.v61-awards-note{text-align:left}.v61-team-chip img{width:64px}}
+</style>
+<script>
+(function(){
+  const YEAR='2025';
+  const DISPLAY_SEASON='2025-26 / 2026 Awards';
+  const TEAM_AWARDS=[
+    {group:'Team Awards', award:'Pool Champ', team:'Blues Brothers', prize:'$570.05'},
+    {group:'Conference Winners', award:'Clarence Campbell', team:"Damo's Dusters", prize:'$100'},
+    {group:'Conference Winners', award:'Prince of Wales', team:"Don's Cherry Pickers", prize:'$100'}
+  ];
+  const PLAYER_AWARDS=[
+    {group:'Player Awards', award:'Hart', player:'Nikita Kucherov', team:"Damo's Dusters", prize:'$75'},
+    {group:'Player Awards', award:'Vezina', player:'Andrei Vasilevskiy', team:"Don's Cherry Pickers", prize:'$50'},
+    {group:'Player Awards', award:'Calder', player:'Matthew Schaefer', team:'NG United', prize:'$25'},
+    {group:'Player Awards', award:'Norris', player:'Zach Werenski', team:'The Kings Cowboys', displayTeam:'Queens Cowboys', prize:'$50'},
+    {group:'Player Awards', award:'Rocket Richard', player:'Nathan MacKinnon', team:"Damo's Dusters", prize:'$50'},
+    {group:'Player Awards', award:'Most Fantasy Pts', player:'Connor McDavid', team:'Blues Brothers', prize:'$50'}
+  ];
+  const ALL_AWARDS=[...TEAM_AWARDS,...PLAYER_AWARDS];
+  function esc(x){return String(x??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+  function norm(x){return String(x||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'');}
+  function teamLookup(name){
+    const aliases={dcp:"Don's Cherry Pickers",queenscowboys:'The Kings Cowboys',thequeenscowboys:'The Kings Cowboys'};
+    const wanted=aliases[norm(name)]||name;
+    try{if(typeof teamByName==='function'){const t=teamByName(wanted); if(t)return t;}}catch(e){}
+    try{if(Array.isArray(TEAMS)){return TEAMS.find(t=>norm(t.name)===norm(wanted))||TEAMS.find(t=>norm(t.name).includes(norm(wanted))||norm(wanted).includes(norm(t.name)));}}catch(e){}
+    return {name:wanted};
+  }
+  function dogSrc(teamName){
+    const t=teamLookup(teamName)||{name:teamName};
+    const nm=t.name||teamName;
+    try{if(typeof dogtagSrc==='function'){const s=dogtagSrc(t); if(s)return s;}}catch(e){}
+    try{if(typeof DOGTAGS!=='undefined'&&DOGTAGS&&DOGTAGS[nm])return DOGTAGS[nm];}catch(e){}
+    try{if(t&&t.dogtag)return t.dogtag;}catch(e){}
+    return '';
+  }
+  function teamChip(a){
+    const src=dogSrc(a.team);
+    const label=a.displayTeam||a.team;
+    return `<div class="v61-team-chip">${src?`<img src="${esc(src)}" alt="${esc(label)} dog tag" loading="lazy">`:''}<span>${esc(label)}</span></div>`;
+  }
+  function card(a){
+    const isPlayer=!!a.player;
+    return `<article class="v61-award-card"><div class="v61-award-kicker">${esc(a.group)}</div><div class="v61-award-name">${esc(a.award)}</div>${isPlayer?`<div class="v61-award-player">${esc(a.player)}</div>`:''}<div class="v61-award-money">${esc(a.prize)}</div>${teamChip(a)}</article>`;
+  }
+  function buildForeverAwardsPage(){
+    return `<div class="v61-awards-page"><div class="v61-awards-title">Forever Pool Awards</div><div class="v61-awards-note">Updated from the commissioner-provided 2026 Forever Pool award list. Last year’s placeholder team names are ignored.</div><div class="v61-awards-section-title">Team Awards</div><div class="v61-awards-grid">${TEAM_AWARDS.map(card).join('')}</div><div class="v61-awards-section-title">Player Awards</div><div class="v61-awards-grid">${PLAYER_AWARDS.map(card).join('')}</div><div class="v61-finance"><div>Prize Total<b>$1,070.05</b></div><div>Buy-In<b>$100 × 12 = $1,200.00</b></div><div>Pool Cost<b>$129.95</b></div><div>Per Person Cost<b>$10.82</b></div></div></div>`;
+  }
+  function applyForeverAwardsToData(){
+    try{if(typeof TROPHY_IMGS!=='undefined'&&TROPHY_IMGS&&!TROPHY_IMGS.norris)TROPHY_IMGS.norris='assets/trophies/norris.png';}catch(e){}
+    try{
+      if(typeof AWARDS==='undefined'||!AWARDS)return;
+      const keys=['championship','clarence','wales','hart','vezina','calder','norris','mvfp','artross'];
+      Object.keys(AWARDS).forEach(team=>{keys.forEach(k=>{if(Array.isArray(AWARDS[team][k]))AWARDS[team][k]=AWARDS[team][k].filter(x=>String(x.year)!==YEAR);});});
+      function add(team,key,player){if(!AWARDS[team])AWARDS[team]={}; if(!Array.isArray(AWARDS[team][key]))AWARDS[team][key]=[]; AWARDS[team][key].push(player?{year:YEAR,player}:{year:YEAR});}
+      add('Blues Brothers','championship');
+      add("Damo's Dusters",'clarence');
+      add("Don's Cherry Pickers",'wales');
+      add("Damo's Dusters",'hart','Kucherov');
+      add("Don's Cherry Pickers",'vezina','Vasilevskiy');
+      add('NG United','calder','Schaefer');
+      add('The Kings Cowboys','norris','Werenski');
+      add('Blues Brothers','mvfp','McDavid');
+      // Rocket Richard has no historical trophy key in the original Forever Pool trophy grid, so it is shown on the new Awards page/ticker only.
+    }catch(e){}
+  }
+  function v61TickerItems(){
+    return ALL_AWARDS.map(a=>`${a.award}: ${a.player?`${a.player} · `:''}${a.displayTeam||a.team}${a.prize?` · ${a.prize}`:''}`);
+  }
+  function v61AwardTicker(){
+    const board=document.getElementById('v27LivewireBoard');
+    if(!board)return;
+    if(window.v59AwardTickerTimer){clearInterval(window.v59AwardTickerTimer); window.v59AwardTickerTimer=null;}
+    if(window.v61ForeverAwardTimer){clearInterval(window.v61ForeverAwardTimer); window.v61ForeverAwardTimer=null;}
+    const brand=board.querySelector('.v27-brand'), type=board.querySelector('.v27-type'), text=board.querySelector('.v27-text');
+    if(brand)brand.textContent='Forever Pool';
+    let idx=Number(board.dataset.v61Idx||0);
+    const items=v61TickerItems();
+    function show(){if(type)type.textContent='2026 Awards'; if(text)text.textContent=items[idx%items.length]; board.dataset.v61Idx=String(++idx); board.classList.remove('v27-pop'); void board.offsetWidth; board.classList.add('v27-pop');}
+    show();
+    window.v61ForeverAwardTimer=setInterval(show,4200);
+    board.onclick=show;
+  }
+  applyForeverAwardsToData();
+  const oldRender=window.render;
+  window.render=function(){
+    try{if(typeof view!=='undefined'&&view==='nhlawards'){const board=document.getElementById('board'); if(board){board.innerHTML=buildForeverAwardsPage(); return;}}}catch(e){}
+    return oldRender&&oldRender.apply(this,arguments);
+  };
+  window.loadTicker=window.updateTickerV16=window.updateTickerV17=window.updateTickerV18=window.updateTickerV19=window.updateTickerV20=window.updateTickerV21=window.updateTickerV22=window.updateTickerV23=window.updateTickerV24=window.updateLivewireFlipV24=function(){setTimeout(v61AwardTicker,80);return v61AwardTicker();};
+  function boot(){applyForeverAwardsToData(); setTimeout(v61AwardTicker,120); setTimeout(v61AwardTicker,1000); try{if(typeof view!=='undefined'&&view==='nhlawards')render();}catch(e){}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
