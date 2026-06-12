@@ -16,3 +16,21 @@ V20 update:
 - Restored desktop ticker to a readable speed.
 - Removed hover/touch pause behavior.
 - Reworked mobile ticker to use a continuous four-copy loop so it should not go blank after a second.
+
+V59 SHARED POOL UPDATES STORAGE
+-------------------------------
+Pool Updates no longer uses browser localStorage for questions/votes. The pages now call:
+  /api/pool-updates?pool=bbl
+  /api/pool-updates?pool=forever
+
+For questions/votes to appear for everyone after refresh, configure shared storage in Vercel:
+  UPSTASH_REDIS_REST_URL
+  UPSTASH_REDIS_REST_TOKEN
+
+Fast setup:
+1. In Vercel, open your project.
+2. Go to Storage and create/connect an Upstash Redis database, or create one at Upstash and copy the REST URL/token.
+3. Add those two environment variables in Vercel Project Settings -> Environment Variables.
+4. Redeploy.
+
+Without those variables, the API will warn that shared storage is not configured and will not save league-wide questions/votes.
