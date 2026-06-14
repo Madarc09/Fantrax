@@ -5681,3 +5681,99 @@ loadFantraxApiPatch();
   function boot(){setTimeout(()=>{try{if(typeof render==='function'&&typeof view!=='undefined'&&view==='nhlawards')render();}catch(e){}},100); setTimeout(awardTicker,260); setTimeout(awardTicker,1300);} if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
+
+
+<!-- === V65 awards cleanup, remove manager rankings, add best scoring period === -->
+<style>
+  #tabManagerRank{display:none!important}
+  .v65-awards-wrap{display:grid;gap:14px;margin-top:14px}
+  .v65-awards-section{border:1px solid rgba(213,157,70,.25);border-radius:16px;background:rgba(0,0,0,.42);padding:13px}
+  .v65-section-title{font-family:Impact,"Arial Black",sans-serif;text-transform:uppercase;color:#ffd98b;letter-spacing:1.5px;font-size:24px;margin-bottom:10px;text-shadow:0 2px 2px #000}
+  .v65-award-row{display:grid;grid-template-columns:minmax(145px,.8fr) minmax(160px,1fr) minmax(190px,1fr) minmax(90px,.45fr);gap:10px;align-items:center;border-top:1px solid rgba(255,255,255,.08);padding:10px 0;font-family:monospace;color:#f6e0ad}
+  .v65-award-row:first-of-type{border-top:0}
+  .v65-award-name{font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.08em}
+  .v65-player{color:#ffd98b;font-weight:900}
+  .v65-team{color:rgba(255,255,255,.72);text-transform:uppercase;font-size:11px;letter-spacing:.07em}
+  .v65-prize{justify-self:end;display:inline-block;border:1px solid rgba(213,157,70,.35);border-radius:999px;padding:4px 8px;color:#fff;background:rgba(213,157,70,.14);font-weight:900;white-space:nowrap}
+  .v65-empty-prize{opacity:.45}
+  .v65-period-meta{font-family:monospace;text-transform:uppercase;color:rgba(255,255,255,.62);font-size:10px;letter-spacing:.08em;margin-top:3px}
+  @media(max-width:760px){.v65-award-row{grid-template-columns:1fr;gap:4px}.v65-section-title{font-size:22px}.v65-prize{justify-self:start}}
+</style>
+<script>
+(function(){
+  const V65_POOL_TITLE='Forever Pool';
+  const V65_MATCHUP_DATA='../data/forever-matchups.json';
+  const V65_TEAM_AWARDS=[
+    {award:'Pool Champ', winner:'Blues Brothers', meta:'2026', prize:'$570.05'},
+    {award:'Clarence Campbell', winner:"Damo's Dusters", meta:'Conference Winner', prize:'$100'},
+    {award:'Prince of Wales', winner:"Don's Cherry Pickers", meta:'Conference Winner', prize:'$100'}
+  ];
+  const V65_PLAYER_AWARDS=[
+    {award:'Hart', player:'Nikita Kucherov', team:"Damo's Dusters", prize:'$75'},
+    {award:'Vezina', player:'Andrei Vasilevskiy', team:"Don's Cherry Pickers", prize:'$50'},
+    {award:'Calder', player:'Matthew Schaefer', team:'NG United', prize:'$50'},
+    {award:'Norris', player:'Zach Werenski', team:'The Kings Cowboys', prize:'$50'},
+    {award:'Rocket Richard', player:'Nathan MacKinnon', team:"Damo's Dusters", prize:'$50'},
+    {award:'Most Fantasy Pts', player:'Connor McDavid', team:'Blues Brothers', prize:'$50'}
+  ];
+  const V65_SUMMARY=[
+    {label:'Prize Total', value:'$1,095.05'},
+    {label:'Buy-In', value:'$100 × 12 = $1,200.00'},
+    {label:'Pool Cost', value:'$129.95'},
+    {label:'Per Person Cost', value:'$10.82'}
+  ];
+  function esc(x){return String(x??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+  function prize(p){return p?`<span class="v65-prize">${esc(p)}</span>`:`<span class="v65-prize v65-empty-prize">—</span>`;}
+  function awardRow(a,isPlayer){
+    return `<div class="v65-award-row"><div class="v65-award-name">${esc(a.award)}</div><div class="v65-player">${esc(isPlayer?a.player:a.winner)}</div><div class="v65-team">${esc(isPlayer?a.team:a.meta)}</div><div>${prize(a.prize)}</div></div>`;
+  }
+  function buildV65AwardsPage(){
+    return `<div class="v57-page"><div class="v57-title">2026 Pool Awards</div><div class="v57-note">Forever Pool awards shown in the same format as Basement Bar League. Old trophy-poster/dog-tag awards page is bypassed.</div><div class="v65-awards-wrap"><section class="v65-awards-section"><div class="v65-section-title">Team Awards</div>${V65_TEAM_AWARDS.map(a=>awardRow(a,false)).join('')}</section><section class="v65-awards-section"><div class="v65-section-title">Player Awards</div>${V65_PLAYER_AWARDS.map(a=>awardRow(a,true)).join('')}</section><section class="v65-awards-section"><div class="v65-section-title">Prize Summary</div>${V65_SUMMARY.map(a=>`<div class="v65-award-row"><div class="v65-award-name">${esc(a.label)}</div><div class="v65-player">${esc(a.value)}</div><div class="v65-team"></div><div></div></div>`).join('')}</section></div></div>`;
+  }
+  function removeManagerTab(){const t=document.getElementById('tabManagerRank'); if(t)t.remove();}
+  const prevCtrl=window.ctrl||ctrl;
+  window.ctrl=ctrl=function(){
+    if(typeof view!=='undefined'&&view==='managerrankings')view='rankings';
+    if(typeof prevCtrl==='function')prevCtrl.apply(this,arguments);
+    removeManagerTab();
+    if(typeof view!=='undefined'&&(view==='awards'||view==='nhlawards')){['fRowEra','fRow1','fRow2','fRowA'].forEach(id=>{const el=document.getElementById(id); if(el)el.classList.add('hide');});}
+    if(typeof view!=='undefined'&&view==='bestseasons'){
+      const row=document.getElementById('fRow1');
+      if(row)row.innerHTML=`<button class="fbtn${bsMode==='record'?' active':''}" onclick="bsMode='record';openIdx=null;ctrl();render()">Best W-L Record</button><button class="fbtn${bsMode==='points'?' active':''}" onclick="bsMode='points';openIdx=null;ctrl();render()">Best Fantasy Pts</button><button class="fbtn${bsMode==='period'?' active':''}" onclick="bsMode='period';openIdx=null;ctrl();render()">Best Scoring Period</button>`;
+    }
+  };
+  const prevRender=window.render||render;
+  window.render=render=function(){
+    removeManagerTab();
+    if(typeof view!=='undefined'&&view==='managerrankings'){view='rankings'; try{ctrl();}catch(e){}}
+    if(typeof view!=='undefined'&&(view==='awards'||view==='nhlawards')){const b=document.getElementById('board'); if(b){b.innerHTML=buildV65AwardsPage();return;}}
+    if(typeof view!=='undefined'&&view==='bestseasons'&&bsMode==='period'){renderBestScoringPeriods();return;}
+    return prevRender&&prevRender.apply(this,arguments);
+  };
+  async function loadPeriods(){const res=await fetch(V65_MATCHUP_DATA,{cache:'no-store'}); if(!res.ok)throw new Error('Could not load matchup history.'); return await res.json();}
+  function normTeam(n){return String(n||'').replace(/\s+/g,' ').trim();}
+  function fmt(n){return Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2}).replace(/\.0$/,'');}
+  function buildPeriodRows(data){
+    const rows=[];
+    (data.games||[]).forEach(g=>{
+      if(g.away&&g.awayScore!=null)rows.push({team:normTeam(g.away),score:Number(g.awayScore),opp:normTeam(g.home),oppScore:Number(g.homeScore),season:g.season||g.seasonKey,period:g.period,result:Number(g.awayScore)>Number(g.homeScore)?'W':Number(g.awayScore)<Number(g.homeScore)?'L':'T'});
+      if(g.home&&g.homeScore!=null)rows.push({team:normTeam(g.home),score:Number(g.homeScore),opp:normTeam(g.away),oppScore:Number(g.awayScore),season:g.season||g.seasonKey,period:g.period,result:Number(g.homeScore)>Number(g.awayScore)?'W':Number(g.homeScore)<Number(g.awayScore)?'L':'T'});
+    });
+    return rows.sort((a,b)=>b.score-a.score||String(b.season).localeCompare(String(a.season))||Number(a.period)-Number(b.period)).slice(0,50);
+  }
+  async function renderBestScoringPeriods(){
+    const b=document.getElementById('board'); if(!b)return;
+    b.innerHTML='<div class="bs-note">Loading best scoring periods from saved matchup history…</div>';
+    try{
+      const data=await loadPeriods(); const rows=buildPeriodRows(data);
+      const body=rows.map((r,i)=>`<div><div class="row"><div class="r-rank${i===1?' s2':i===2?' s3':''}">${i+1}</div><div class="r-tag"><div class="v57-manager-mark"><span class="v57-manager-name">${esc(r.team)}</span></div></div><div class="r-info"><div class="r-sub">${esc(r.season)} · Scoring Period ${esc(r.period)} · vs ${esc(r.opp)} <span class="v65-period-meta">(${esc(r.result)} ${fmt(r.score)}-${fmt(r.oppScore)})</span></div></div><div class="r-cups"><span class="no-cup">—</span></div><div class="r-pts"><div class="r-pts-val">${fmt(r.score)}</div><div class="r-pts-lbl">PERIOD PTS</div></div><div class="r-chev"></div></div></div>`).join('');
+      b.innerHTML=`<div class="bs-note">All Time · Top single-team scores in one scoring period</div>${body||'<div class="trade-status">No scoring-period data found.</div>'}`;
+    }catch(e){b.innerHTML=`<div class="trade-status">Best scoring period failed to load: ${esc(e.message||String(e))}</div>`;}
+  }
+  const oldSetView=window.setView||setView;
+  window.setView=setView=function(v){if(v==='managerrankings')v='rankings'; return oldSetView?oldSetView(v):undefined;};
+  function boot(){removeManagerTab(); try{if(typeof ctrl==='function')ctrl(); if(typeof view!=='undefined'&&(view==='awards'||view==='nhlawards'||view==='bestseasons'))render();}catch(e){}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else setTimeout(boot,50);
+  setTimeout(boot,500); setTimeout(removeManagerTab,1500);
+})();
+</script>
