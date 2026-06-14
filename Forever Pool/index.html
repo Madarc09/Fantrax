@@ -5588,3 +5588,96 @@ loadFantraxApiPatch();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
+
+
+<!-- === V63 award year labels: trophy cases use season-ending award year === -->
+<script>
+(function(){
+  function awardEndYear(v, short){
+    const s=String(v||'').trim();
+    if(!s)return '';
+    const range=s.match(/^(\d{4})\s*\/\s*(\d{2,4})$/);
+    if(range){
+      const start=Number(range[1]);
+      const tail=range[2];
+      const end=tail.length===4?Number(tail):(Math.floor(start/100)*100+Number(tail));
+      return short?String(end).slice(-2):String(end);
+    }
+    if(/^\d{4}$/.test(s)){
+      const end=Number(s)+1;
+      return short?String(end).slice(-2):String(end);
+    }
+    return s;
+  }
+  window.awardEndYear=awardEndYear;
+  try{
+    trophyItems=function(wins,key,size=''){
+      if(!wins||!wins.length)return `<span class="tr-none">None</span>`;
+      return wins.slice().sort((a,b)=>String(a.year||a.season||'').localeCompare(String(b.year||b.season||''))).map(w=>{
+        const raw=w.year||w.season||'';
+        return `<div class="tr">${trophyImg(key,size)}<div class="tr-yr">'${awardEndYear(raw,true)}</div>${w.player?`<div class="tr-pl">${w.player}</div>`:''}</div>`;
+      }).join('');
+    };
+  }catch(e){}
+  try{
+    trophyHtmlForManager=function(manager){
+      const arr=managerAwards(manager);
+      if(!arr.length)return '<div class="v16-award-empty">No trophy case items listed.</div>';
+      return arr.map(a=>`<span class="v16-award-pill"><b>${esc(a.label)}</b>${a.season?` ${esc(awardEndYear(a.season,false))}`:''}${a.player?` · ${esc(a.player)}`:''}${a.team?` · ${esc(a.team)}`:''}</span>`).join('');
+    };
+  }catch(e){}
+  try{if(typeof view!=='undefined'&&(view==='awards'||view==='managerrankings'||view==='nhlawards'))render();}catch(e){}
+})();
+</script>
+
+
+<!-- === V64 Forever Pool awards page restyle: match Basement Bar League awards format === -->
+<style>
+  .v62-awards-wrap{display:grid;gap:14px;margin-top:14px}
+  .v62-awards-section{border:1px solid rgba(213,157,70,.25);border-radius:16px;background:rgba(0,0,0,.42);padding:13px}
+  .v62-section-title{font-family:Impact,"Arial Black",sans-serif;text-transform:uppercase;color:#ffd98b;letter-spacing:1.5px;font-size:24px;margin-bottom:10px;text-shadow:0 2px 2px #000}
+  .v62-award-row{display:grid;grid-template-columns:minmax(145px,.8fr) minmax(150px,1fr) minmax(180px,1fr);gap:10px;align-items:center;border-top:1px solid rgba(255,255,255,.08);padding:10px 0;font-family:monospace;color:#f6e0ad}
+  .v62-award-row:first-of-type{border-top:0}.v62-award-name{font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.08em}.v62-player{color:#ffd98b;font-weight:900}.v62-team{color:rgba(255,255,255,.72);text-transform:uppercase;font-size:11px;letter-spacing:.07em}.row-award-rocket .row-award-label{color:#ffdf91}
+  @media(max-width:760px){.v62-award-row{grid-template-columns:1fr;gap:4px}.v62-section-title{font-size:22px}}
+</style>
+<script>
+(function(){
+  const V64_POOL='Forever Pool';
+  const V64_AWARD_YEAR='2026';
+  const V64_TEAM_AWARDS=[
+    {key:'championship',award:'Pool Champ',team:'Blues Brothers',meta:'2026 · $570.05'},
+    {key:'clarence',award:'Clarence Campbell',team:"Damo's Dusters",meta:'2026 · $100'},
+    {key:'wales',award:'Prince of Wales',team:"Don\'s Cherry Pickers",meta:'2026 · $100'}
+  ];
+  const V64_PLAYER_AWARDS=[
+    {key:'hart',award:'Hart',player:'Nikita Kucherov',team:"Damo's Dusters",prize:'$75'},
+    {key:'vezina',award:'Vezina',player:'Andrei Vasilevskiy',team:"Don\'s Cherry Pickers",prize:'$50'},
+    {key:'calder',award:'Calder',player:'Matthew Schaefer',team:'NG United',prize:'$25'},
+    {key:'norris',award:'Norris',player:'Zach Werenski',team:'Queens Cowboys',prize:'$50'},
+    {key:'rocket',award:'Rocket Richard',player:'Nathan MacKinnon',team:"Damo's Dusters",prize:'$50'},
+    {key:'mvfp',award:'Most Fantasy Pts',player:'Connor McDavid',team:'Blues Brothers',prize:'$50'}
+  ];
+  const V64_SUMMARY=[
+    {award:'Prize Total',player:'$1,070.05',team:'Total payouts'},
+    {award:'Buy-In',player:'$100 × 12',team:'$1,200.00'},
+    {award:'Pool Cost',player:'$129.95',team:'Forever Pool cost'},
+    {award:'Per Person Cost',player:'$10.82',team:'Cost share'}
+  ];
+  function esc(x){return String(x??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+  function teamRows(){return V64_TEAM_AWARDS.map(a=>`<div class="v62-award-row"><div class="v62-award-name">${esc(a.award)}</div><div class="v62-player">${esc(a.team)}</div><div class="v62-team">${esc(a.meta)}</div></div>`).join('');}
+  function playerRows(){return V64_PLAYER_AWARDS.map(a=>`<div class="v62-award-row"><div class="v62-award-name">${esc(a.award)}</div><div class="v62-player">${esc(a.player)}</div><div class="v62-team">${esc(a.team)}${a.prize?' · '+esc(a.prize):''}</div></div>`).join('');}
+  function summaryRows(){return V64_SUMMARY.map(a=>`<div class="v62-award-row"><div class="v62-award-name">${esc(a.award)}</div><div class="v62-player">${esc(a.player)}</div><div class="v62-team">${esc(a.team)}</div></div>`).join('');}
+  function buildV64ForeverAwardsPage(){
+    return `<div class="v57-page"><div class="v57-title">2026 Pool Awards</div><div class="v57-note">Forever Pool award ownership, using the pool award categories only. This page now uses the same awards format as Basement Bar League.</div><div class="v62-awards-wrap"><section class="v62-awards-section"><div class="v62-section-title">Team Awards</div>${teamRows()}</section><section class="v62-awards-section"><div class="v62-section-title">Player Awards</div>${playerRows()}</section><section class="v62-awards-section"><div class="v62-section-title">Prize Summary</div>${summaryRows()}</section></div></div>`;
+  }
+  const previousRender=window.render;
+  window.render=function(){
+    try{if(typeof view!=='undefined'&&view==='nhlawards'){const b=document.getElementById('board'); if(b){b.innerHTML=buildV64ForeverAwardsPage(); return;}}}catch(e){}
+    return previousRender&&previousRender.apply(this,arguments);
+  };
+  function tickerItems(){return V64_TEAM_AWARDS.concat(V64_PLAYER_AWARDS).map(a=>({type:'Pool Awards',text:a.player?`${a.award}: ${a.player} · ${a.team}${a.prize?' · '+a.prize:''}`:`${a.award}: ${a.team}${a.meta?' · '+a.meta:''}`}));}
+  function awardTicker(){const board=document.getElementById('v27LivewireBoard'); if(!board)return; const items=tickerItems(); if(!items.length)return; const brand=board.querySelector('.v27-brand'), type=board.querySelector('.v27-type'), text=board.querySelector('.v27-text'); if(brand)brand.textContent=V64_POOL; let idx=Number(board.dataset.v64Idx||0); function show(){const it=items[idx%items.length]; if(type)type.textContent=it.type; if(text)text.textContent=it.text; board.dataset.v64Idx=String(++idx); board.classList.remove('v27-pop'); void board.offsetWidth; board.classList.add('v27-pop');} show(); if(window.v61ForeverAwardTimer)clearInterval(window.v61ForeverAwardTimer); if(window.v64AwardTickerTimer)clearInterval(window.v64AwardTickerTimer); window.v64AwardTickerTimer=setInterval(show,4200); board.onclick=show;}
+  window.loadTicker=window.updateTickerV16=window.updateTickerV17=window.updateTickerV18=window.updateTickerV19=window.updateTickerV20=window.updateTickerV21=window.updateTickerV22=window.updateTickerV23=window.updateTickerV24=window.updateLivewireFlipV24=function(){setTimeout(awardTicker,80);return awardTicker();};
+  function boot(){setTimeout(()=>{try{if(typeof render==='function'&&typeof view!=='undefined'&&view==='nhlawards')render();}catch(e){}},100); setTimeout(awardTicker,260); setTimeout(awardTicker,1300);} if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>

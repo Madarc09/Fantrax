@@ -52,3 +52,6 @@ You do NOT need all five variables from the older Vercel KV integration for this
 If Vercel auto-populates a value while you are adding the variable, make sure the saved value is the actual Redis REST URL/token, not just an auto-suggested variable name or placeholder. The REST URL should start with https:// and include upstash.io.
 
 After adding or editing variables, redeploy the project again. Old deployments do not receive newly added environment variables.
+
+
+V63: Award/trophy labels now use the season-ending award year. Current 2025/26 awards display as 2026, previous 2024/25 awards display as 2025, etc.
