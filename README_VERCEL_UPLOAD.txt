@@ -149,3 +149,10 @@ V75 POOL UPDATES TRUE HOCKEY CARD STYLE
 - Vote options are compact regulated rows instead of oversized cards, with colored left stripes, percentage badges, progress bars, and dog-tag vote slots.
 - Mobile layout is optimized as thumb-friendly tap rows with horizontal dog-tag strips and compact percentage badges.
 - Voting behavior is unchanged: click/tap an option to vote, another option to change, or the selected option again to remove your vote.
+
+
+V76 update:
+- Replaced the temporary hockey-player silhouette detail in Pool Updates with the uploaded cropped manager/fist photo asset: assets/pool-updates-angry-manager.png.
+- Added a Remove Poll button inside every poll card. It asks for confirmation, then removes the poll from the shared Redis question list for that pool.
+- Added a removeQuestion/removePoll action to api/pool-updates.js.
+- Voting behavior remains the same: click an option to vote/change, click your selected option again to remove your dog tag.

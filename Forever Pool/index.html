@@ -5278,398 +5278,7 @@ loadFantraxApiPatch();
   function saveUpdates(q){localStorage.setItem(V57_STORE,JSON.stringify(q));}
   function defaultUpdates(){return loadUpdates();}
   function buildPoolUpdatesPage(){const q=defaultUpdates(); return `<div class="v57-page"><div class="v57-title">Pool Updates</div><div class="v57-note">Admin can add vote questions here. This first version enforces one vote per voter name in this browser storage and lets that voter change their vote. A server/database can make it truly cross-device later.</div><div class="v57-form"><input id="v57Voter" placeholder="Your manager name"><div class="v57-admin-row"><textarea id="v57Question" placeholder="Admin: type a new question"></textarea><button class="v57-button" onclick="v57AddQuestion()">Add Question</button></div><input id="v57Options" placeholder="Options separated by commas, ex: Yes, No, Maybe"></div><div id="v57Questions">${q.map(questionCard).join('')}</div></div>`;}
-  function questionCard(q){const totals={}; (q.options||[]).forEach(o=>totals[o]=0); Object.values(q.votes||{}).forEach(v=>{if(totals[v]!=null)totals[v]++;}); const total=Object.values(totals).reduce((a,b)=>a+b,0); const opts=(q.options||[]).map(o=>{const count=totals[o]||0,p=total?Math.round(count/total*100):0; return `<label class="v57-option"><input type="radio" name="v57_${esc(q.id)}" value="${esc(o)}"><span>${esc(o)}</span><span class="v57-small">${count} vote${count===1?'':'s'} · ${p}%</span><span class="v57-bar"><span class="v57-fill" style="width:${p}%"></span></span></label>`;}).join(''); return `<article class="v57-question-card"><div class="v57-award-kicker">${esc(q.question)}</div><div class="v57-small">${total} total vote${total===1?'':'s'}</div>${opts}<button class="v57-button" onclick="v57SubmitVote('${esc(q.id)}')">Submit / Change Vote</button></article>`;}
-  window.v57AddQuestion=function(){const qtxt=document.getElementById('v57Question')?.value.trim(); const opts=(document.getElementById('v57Options')?.value||'').split(',').map(x=>x.trim()).filter(Boolean); if(!qtxt||opts.length<2){alert('Add a question and at least two comma-separated options.');return;} const qs=loadUpdates(); qs.unshift({id:'q_'+Date.now(),question:qtxt,options:opts,votes:{}}); saveUpdates(qs); render();};
-  window.v57SubmitVote=function(id){const voter=(document.getElementById('v57Voter')?.value||'').trim(); if(!voter){alert('Type your manager name first.');return;} const selected=document.querySelector(`input[name="v57_${CSS.escape(id)}"]:checked`); if(!selected){alert('Pick an option first.');return;} const qs=loadUpdates(); const q=qs.find(x=>x.id===id); if(!q)return; q.votes=q.votes||{}; q.votes[voter]=selected.value; saveUpdates(qs); render();};
-  function addTabs(){const tabs=document.querySelector('.tabs'); if(!tabs)return; if(!document.getElementById('tabManagerRank')){const b=document.createElement('button'); b.className='tab'; b.id='tabManagerRank'; b.textContent='Rank By Manager'; b.onclick=()=>setView('managerrankings'); const after=document.getElementById('tabR'); after&&after.parentNode?after.parentNode.insertBefore(b,after.nextSibling):tabs.appendChild(b);} if(!document.getElementById('tabPoolUpdates')){const b=document.createElement('button'); b.className='tab'; b.id='tabPoolUpdates'; b.textContent='Pool Updates'; b.onclick=()=>setView('poolupdates'); tabs.appendChild(b);}}
-  const oldRender=window.render||render; window.render=render=function(){ if(view==='managerrankings'){document.getElementById('board').innerHTML=buildManagerRankingsPage();return;} if(view==='poolupdates'){document.getElementById('board').innerHTML=buildPoolUpdatesPage();return;} return oldRender(); };
-  const oldCtrl=window.ctrl||ctrl; window.ctrl=ctrl=function(){oldCtrl(); addTabs(); const mgr=document.getElementById('tabManagerRank'); if(mgr)mgr.classList.toggle('active',view==='managerrankings'); const upd=document.getElementById('tabPoolUpdates'); if(upd)upd.classList.toggle('active',view==='poolupdates'); if(view==='managerrankings'){const f1=document.getElementById('fRow1'),f2=document.getElementById('fRow2'),fa=document.getElementById('fRowA'),fe=document.getElementById('fRowEra'); if(f1)f1.classList.remove('hide'); if(f2)f2.classList.remove('hide'); if(fa)fa.classList.add('hide'); if(fe)fe.classList.toggle('hide',!V57_HAS_MODERN);} if(view==='poolupdates'){['fRowEra','fRow1','fRow2','fRowA'].forEach(id=>{const el=document.getElementById(id); if(el)el.classList.add('hide');});}};
-  const oldSetView=window.setView||setView; window.setView=function(v){ if(v==='nhlawards')v='awards'; if(['managerrankings','poolupdates'].includes(v)){view=v;openIdx=null;v57Open=null;rMode=null;season='all';ctrl();render();return;} oldSetView(v);};
-  const oldEnsure=window.ensureTabs; window.ensureTabs=function(){if(typeof oldEnsure==='function')oldEnsure(); addTabs();};
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{addTabs();}); else {addTabs();} setTimeout(()=>{try{ctrl();}catch(e){}},600);
-})();
-</script>
-
-
-
-<!-- === V58 pool updates dogtag voting override === -->
-<style>
-  .v58-vote-top{display:grid;grid-template-columns:minmax(220px,360px) 1fr;gap:14px;align-items:end;margin:14px 0 18px;padding:12px;border:1px solid rgba(213,157,70,.22);border-radius:16px;background:rgba(0,0,0,.36)}
-  .v58-team-picker label,.v58-admin-label{display:block;font-family:monospace;color:rgba(255,255,255,.62);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
-  .v58-vote-top select,.v58-admin-panel textarea,.v58-admin-panel input{width:100%;box-sizing:border-box;border:1px solid rgba(213,157,70,.35);border-radius:12px;background:#070707;color:#f3dfb6;padding:10px 12px;font-family:monospace;font-size:12px}.v58-admin-panel textarea{min-height:84px;resize:vertical}
-  .v58-selected-preview{min-height:74px;display:flex;align-items:center;gap:12px;border:1px dashed rgba(213,157,70,.24);border-radius:14px;padding:8px 10px;color:rgba(255,255,255,.62);font-family:monospace;text-transform:uppercase;font-size:11px;letter-spacing:.06em;background:rgba(255,255,255,.03)}
-  .v58-preview-tag{width:148px;max-width:42vw;height:58px;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55))}
-  .v58-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:12px}
-  .v58-option-card{border:1px solid rgba(213,157,70,.25);border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.62));padding:12px;min-height:150px;display:flex;flex-direction:column;gap:9px;cursor:pointer;transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease}
-  .v58-option-card:hover{transform:translateY(-1px);border-color:rgba(255,220,135,.7);box-shadow:0 12px 24px rgba(0,0,0,.28)}
-  .v58-option-card.voted-here{border-color:rgba(255,220,135,.86);box-shadow:0 0 0 2px rgba(213,157,70,.18),0 14px 28px rgba(0,0,0,.35)}
-  .v58-option-name{font-family:Impact,"Arial Black",sans-serif;color:#ffd98b;text-transform:uppercase;letter-spacing:1px;font-size:22px;line-height:1}
-  .v58-option-meta{display:flex;justify-content:space-between;gap:8px;align-items:center;font-family:monospace;color:rgba(255,255,255,.58);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
-  .v58-tag-zone{flex:1;display:flex;align-items:center;align-content:flex-start;gap:7px;flex-wrap:wrap;border:1px dashed rgba(255,255,255,.13);border-radius:12px;padding:8px;background:rgba(0,0,0,.25)}
-  .v58-vote-tag{width:112px;height:44px;object-fit:contain;border-radius:7px;filter:drop-shadow(0 7px 8px rgba(0,0,0,.58));background:rgba(0,0,0,.18)}
-  .v58-vote-fallback{border:1px solid rgba(213,157,70,.38);border-radius:999px;padding:6px 9px;color:#f3d28f;font-family:Impact,"Arial Black",sans-serif;text-transform:uppercase;letter-spacing:.8px;font-size:13px;background:rgba(0,0,0,.55)}
-  .v58-empty-tags{font-family:monospace;color:rgba(255,255,255,.38);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
-  .v58-admin-panel{margin-top:16px;padding:12px;border:1px solid rgba(213,157,70,.18);border-radius:16px;background:rgba(0,0,0,.25)}
-  .v58-admin-grid{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}.v58-admin-grid input{margin-top:8px}
-  @media(max-width:760px){.v58-vote-top,.v58-admin-grid{grid-template-columns:1fr}.v58-preview-tag{width:128px}.v58-vote-tag{width:98px;height:39px}.v58-options{grid-template-columns:1fr}}
-</style>
-<script>
-(function(){
-  const V58_STORE_PREFIX = 'poolUpdates:v57:';
-  const V58_SELECTED_PREFIX = 'poolUpdates:v58:selectedTeam:';
-  function esc(x){return String(x??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
-  function norm(x){return String(x||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'');}
-  function poolName(){try{return typeof V57_POOL_NAME!=='undefined'?V57_POOL_NAME:(document.title||'Pool');}catch(e){return document.title||'Pool';}}
-  function storeKey(){return V58_STORE_PREFIX + poolName().replace(/\s+/g,'-').toLowerCase();}
-  function selectedKey(){return V58_SELECTED_PREFIX + poolName().replace(/\s+/g,'-').toLowerCase();}
-  function teams(){
-    try{if(typeof TEAMS!=='undefined' && Array.isArray(TEAMS))return TEAMS;}catch(e){}
-    try{if(typeof DATA!=='undefined' && DATA && Array.isArray(DATA.teams))return DATA.teams;}catch(e){}
-    return [];
-  }
-  function teamName(t){return String((t&&t.name)||'');}
-  function teamKey(t){return String((t&&t.id)||teamName(t));}
-  function dogSrc(t){
-    const nm=teamName(t);
-    try{if(typeof dogtagSrc==='function'){const s=dogtagSrc(t); if(s)return s;}}catch(e){}
-    try{if(typeof DOGTAGS!=='undefined' && DOGTAGS && DOGTAGS[nm])return DOGTAGS[nm];}catch(e){}
-    return (t&&t.dogtag)||'';
-  }
-  function teamByKey(key){const list=teams(); return list.find(t=>teamKey(t)===key)||list.find(t=>norm(teamName(t))===norm(key))||null;}
-  function loadUpdates(){try{return JSON.parse(localStorage.getItem(storeKey())||'[]');}catch(e){return [];}}
-  function saveUpdates(q){localStorage.setItem(storeKey(),JSON.stringify(q));}
-  function defaultUpdates(){return loadUpdates();}
-  function selectedTeam(){return localStorage.getItem(selectedKey())||'';}
-  function validVoteEntries(q){
-    const valid=new Set(teams().map(teamKey));
-    return Object.entries(q.votes||{}).filter(([k,v])=>valid.has(k) && (q.options||[]).includes(v));
-  }
-  function tagHtml(t){
-    if(!t)return '';
-    const src=dogSrc(t), nm=teamName(t);
-    return src?`<img class="v58-vote-tag" src="${esc(src)}" title="${esc(nm)}" alt="${esc(nm)} dog tag" loading="lazy">`:`<span class="v58-vote-fallback" title="${esc(nm)}">${esc(nm)}</span>`;
-  }
-  function pickerHtml(){
-    const t=teamByKey(selectedTeam());
-    const preview=t?(dogSrc(t)?`<img class="v58-preview-tag" src="${esc(dogSrc(t))}" alt="${esc(teamName(t))} dog tag" loading="lazy"><span>Entered as <b>${esc(teamName(t))}</b>. Votes use this team.</span>`:`<b>${esc(teamName(t))}</b><span> entered. Votes use this team.</span>`):'No team selected yet. Use Leave Bar, pick your team at the front door, then come back to Pool Updates.';
-    return `<div class="v58-vote-top"><div class="v58-selected-preview">${preview}</div></div>`;
-  }
-  function questionCard(q){
-    const entries=validVoteEntries(q);
-    const total=entries.length;
-    const selected=selectedTeam();
-    const optionCards=(q.options||[]).map(opt=>{
-      const voters=entries.filter(([k,v])=>v===opt).map(([k])=>teamByKey(k)).filter(Boolean);
-      const count=voters.length, pct=total?Math.round(count/total*100):0;
-      const here=selected && (q.votes||{})[selected]===opt;
-      const tags=voters.length?voters.map(tagHtml).join(''):'<span class="v58-empty-tags">No dog tags here yet</span>';
-      return `<button type="button" class="v58-option-card${here?' voted-here':''}" onclick="v58CastTeamVote('${esc(q.id)}','${esc(opt)}')"><div class="v58-option-name">${esc(opt)}</div><div class="v58-option-meta"><span>${count} vote${count===1?'':'s'}</span><span>${pct}%</span></div><span class="v57-bar"><span class="v57-fill" style="width:${pct}%"></span></span><div class="v58-tag-zone">${tags}</div></button>`;
-    }).join('');
-    return `<article class="v57-question-card"><div class="v57-award-kicker">${esc(q.question)}</div><div class="v57-small">${total} team vote${total===1?'':'s'} · click an option to place your dog tag. Click another option to change it, or click your selected option again to remove it.</div><div class="v58-options">${optionCards}</div></article>`;
-  }
-  function buildPage(){
-    const q=defaultUpdates();
-    return `<div class="v57-page"><div class="v57-title">Pool Updates</div><div class="v57-note">Voting is tied to the team picked at the bar entrance. Each team can vote once per question, can change its vote, or click the same option again to remove its vote.</div>${pickerHtml()}<div id="v57Questions">${q.map(questionCard).join('')}</div><div class="v58-admin-panel"><div class="v58-admin-label">Admin: add a question</div><div class="v58-admin-grid"><div><textarea id="v57Question" placeholder="Admin: type a new question"></textarea><input id="v57Options" placeholder="Options separated by commas, ex: Yes, No, Maybe"></div><button class="v57-button" onclick="v57AddQuestion()">Add Question</button></div></div></div>`;
-  }
-  window.v58SelectTeam=function(key){localStorage.setItem(selectedKey(),key||''); try{render();}catch(e){window.render&&window.render();}};
-  window.v58CastTeamVote=function(id,opt){
-    const key=selectedTeam();
-    if(!key){alert('No team is selected. Use Leave Bar, pick your team at the front door, then come back.');return;}
-    const qs=loadUpdates(); const q=qs.find(x=>String(x.id)===String(id)); if(!q)return;
-    q.votes=q.votes||{}; q.votes[key]=opt; saveUpdates(qs); try{render();}catch(e){window.render&&window.render();}
-  };
-  const oldAdd=window.v57AddQuestion;
-  window.v57AddQuestion=function(){
-    const qtxt=document.getElementById('v57Question')?.value.trim();
-    const opts=(document.getElementById('v57Options')?.value||'').split(',').map(x=>x.trim()).filter(Boolean);
-    if(!qtxt||opts.length<2){alert('Add a question and at least two comma-separated options.');return;}
-    const qs=loadUpdates(); qs.unshift({id:'q_'+Date.now(),question:qtxt,options:opts,votes:{}}); saveUpdates(qs); try{render();}catch(e){window.render&&window.render();}
-  };
-  const oldRender=window.render;
-  window.render=function(){
-    try{if(typeof view!=='undefined' && view==='poolupdates'){const board=document.getElementById('board'); if(board){board.innerHTML=buildPage(); return;}}}catch(e){}
-    return oldRender&&oldRender.apply(this,arguments);
-  };
-})();
-</script>
-
-
-<!-- === V59 shared Pool Updates API + NHL-awards-only ticker hard lock === -->
-<style>
-  .v59-status{margin:12px 0;padding:10px 12px;border:1px solid rgba(213,157,70,.28);border-radius:12px;background:rgba(0,0,0,.35);color:#f3dfb6;font-family:monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;line-height:1.45}
-  .v59-status.warn{border-color:rgba(255,185,70,.5);color:#ffd98b}.v59-status.bad{border-color:rgba(255,90,90,.55);color:#ffb0a6}.v59-status.good{border-color:rgba(120,220,140,.4);color:#c7ffd0}
-  .v59-create-by{display:grid;grid-template-columns:minmax(220px,330px) 1fr;gap:12px;align-items:end;margin-bottom:10px}.v59-created-by{display:flex;align-items:center;gap:10px;margin:8px 0 2px;color:rgba(255,255,255,.62);font-family:monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em}.v59-creator-tag{width:96px;height:38px;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}.v59-loading{opacity:.66;pointer-events:none}.v59-auto-note{margin:6px 0 12px;color:rgba(255,255,255,.58);font-family:monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em}@media(max-width:760px){.v59-create-by{grid-template-columns:1fr}}
-</style>
-
-
-<!-- === V70 Pool Updates style lab + mobile cleanup === -->
-<style>
-  .v70-updates{width:min(1180px,calc(100vw - 18px));box-sizing:border-box}
-  .v70-updates #v57Questions{display:grid;gap:16px;margin-top:12px}
-  .v70-style-picker{margin:12px 0 14px;padding:12px;border:1px solid rgba(213,157,70,.24);border-radius:16px;background:rgba(0,0,0,.32);box-shadow:inset 0 0 18px rgba(0,0,0,.32)}
-  .v70-style-heading{display:flex;justify-content:space-between;gap:10px;align-items:end;margin-bottom:9px}.v70-style-title{font-family:Impact,"Arial Black",sans-serif;text-transform:uppercase;color:#ffd98b;letter-spacing:1.4px;font-size:22px;text-shadow:0 2px 2px #000}.v70-style-sub{font-family:monospace;color:rgba(255,255,255,.55);font-size:10px;text-transform:uppercase;letter-spacing:.06em;text-align:right;line-height:1.3}
-  .v70-style-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.v70-style-chip{border:1px solid rgba(213,157,70,.23);border-radius:12px;background:rgba(255,255,255,.035);color:#f4d99e;padding:9px 10px;cursor:pointer;font-family:monospace;text-transform:uppercase;letter-spacing:.06em;font-size:10px;text-align:left;transition:transform .12s ease,border-color .12s ease,background .12s ease}.v70-style-chip:hover{transform:translateY(-1px);border-color:rgba(255,220,135,.6)}.v70-style-chip.active{border-color:rgba(255,220,135,.88);background:linear-gradient(180deg,rgba(213,157,70,.28),rgba(0,0,0,.5));box-shadow:0 0 0 2px rgba(213,157,70,.14)}
-  .v70-poll-card{position:relative;overflow:hidden;isolation:isolate;padding:18px}.v70-poll-card>*{position:relative;z-index:2}.v70-poll-card:before{position:absolute;right:14px;bottom:3px;z-index:1;opacity:.105;font-family:Impact,"Arial Black",sans-serif;font-size:clamp(58px,13vw,148px);line-height:.78;letter-spacing:-.04em;color:#fff;white-space:pre;text-align:right;pointer-events:none;transform:rotate(-4deg);text-shadow:0 4px 16px #000}.v70-poll-card:after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;border-radius:inherit;background:radial-gradient(circle at 84% 18%,rgba(255,220,135,.16),transparent 34%),linear-gradient(135deg,transparent 0 50%,rgba(255,255,255,.025) 50% 52%,transparent 52%)}
-  .v70-updates .v57-award-kicker{font-size:clamp(22px,3.8vw,40px);line-height:.98;margin-top:6px;max-width:900px}.v70-updates .v58-options{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));align-items:stretch}.v70-updates .v58-option-card{box-sizing:border-box;min-width:0}.v70-updates .v58-option-name{overflow-wrap:anywhere}.v70-updates .v58-tag-zone{min-height:50px}.v70-updates .v57-button{white-space:normal}
-  .v70-style-chalkboard .v70-poll-card{background:radial-gradient(circle at 12% 18%,rgba(71,128,73,.26),transparent 38%),linear-gradient(180deg,rgba(18,48,35,.94),rgba(4,16,12,.92));border-color:rgba(168,214,132,.35);box-shadow:inset 0 0 0 2px rgba(255,255,255,.025),inset 0 0 28px rgba(0,0,0,.6)}.v70-style-chalkboard .v70-poll-card:before{content:"CHALK\A VOTE";color:#d9ffd0}.v70-style-chalkboard .v57-award-kicker{color:#f7f0c7;text-shadow:0 1px 0 #000,0 0 8px rgba(199,255,180,.16)}
-  .v70-style-trophy .v70-poll-card{background:linear-gradient(120deg,rgba(80,48,10,.95),rgba(14,10,7,.92) 62%),radial-gradient(circle at 25% 10%,rgba(255,218,116,.28),transparent 32%);border-color:rgba(255,212,104,.52);box-shadow:0 18px 34px rgba(0,0,0,.42),inset 0 0 18px rgba(255,190,70,.09)}.v70-style-trophy .v70-poll-card:before{content:"TROPHY\A ROOM";color:#ffd36c}.v70-style-trophy .v58-option-card{background:linear-gradient(180deg,rgba(116,68,13,.72),rgba(0,0,0,.72))}
-  .v70-style-dogtags .v70-poll-card{background:linear-gradient(145deg,rgba(74,76,73,.9),rgba(13,14,13,.95));border-color:rgba(214,214,203,.34);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 -25px 55px rgba(0,0,0,.45)}.v70-style-dogtags .v70-poll-card:before{content:"DOG\A TAGS";color:#e9e9d8}.v70-style-dogtags .v70-poll-card:after{background:radial-gradient(circle at 18px 18px,rgba(255,255,255,.18) 0 3px,transparent 4px),radial-gradient(circle at calc(100% - 18px) 18px,rgba(255,255,255,.18) 0 3px,transparent 4px),linear-gradient(135deg,rgba(255,255,255,.05),transparent 30%)}
-  .v70-style-card .v70-poll-card{background:linear-gradient(180deg,#faf0d0,#c69a5b 48%,#131313 49%,#070707);border:7px solid rgba(245,220,142,.72);box-shadow:0 16px 30px rgba(0,0,0,.55),inset 0 0 0 2px rgba(31,45,75,.55)}.v70-style-card .v70-poll-card:before{content:"O-P-C";color:#173966;opacity:.13}.v70-style-card .v57-award-kicker{color:#14264a;text-shadow:none;background:rgba(255,248,212,.72);border-radius:10px;padding:9px}.v70-style-card .v57-small,.v70-style-card .v59-created-by{color:#fff}
-  .v70-style-jumbotron .v70-poll-card{background:#070b12;border-color:rgba(88,190,255,.38);box-shadow:0 0 28px rgba(66,150,255,.12),inset 0 0 0 2px rgba(255,255,255,.035)}.v70-style-jumbotron .v70-poll-card:before{content:"LIVE\A VOTE";color:#69d3ff;opacity:.12}.v70-style-jumbotron .v57-award-kicker{color:#93ebff;text-shadow:0 0 10px rgba(79,207,255,.38)}.v70-style-jumbotron .v58-option-card{border-color:rgba(80,184,255,.35);background:linear-gradient(180deg,rgba(21,65,96,.55),rgba(0,0,0,.72))}.v70-style-jumbotron .v57-fill{background:linear-gradient(90deg,#52c7ff,#ffe16b)}
-  .v70-style-coaster .v70-poll-card{background:radial-gradient(circle at 50% 50%,rgba(126,72,25,.94),rgba(35,18,8,.95) 70%);border:3px dashed rgba(245,205,143,.48);box-shadow:inset 0 0 42px rgba(0,0,0,.42),0 18px 28px rgba(0,0,0,.46)}.v70-style-coaster .v70-poll-card:before{content:"BAR\A TAB";color:#f7d7a2}.v70-style-coaster .v58-option-card{border-radius:999px;min-height:126px;background:rgba(0,0,0,.42)}
-  .v70-style-locker .v70-poll-card{background:linear-gradient(90deg,rgba(42,58,75,.95),rgba(8,13,17,.95));border-left:10px solid rgba(183,41,35,.86);border-color:rgba(141,166,183,.34);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}.v70-style-locker .v70-poll-card:before{content:"LINEUP\A BOARD";color:#dce8ef}.v70-style-locker .v57-award-kicker{color:#fff}.v70-style-locker .v58-option-card{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(0,0,0,.65));border-left:4px solid rgba(255,220,135,.55)}
-  .v70-style-folder .v70-poll-card{background:linear-gradient(180deg,#c99b55,#8d5f29);border-color:rgba(255,236,177,.38);box-shadow:0 16px 28px rgba(0,0,0,.48),inset 0 0 0 2px rgba(91,52,15,.35)}.v70-style-folder .v70-poll-card:before{content:"POOL\A FILE";color:#5f3211;opacity:.16}.v70-style-folder .v70-poll-card:after{background:linear-gradient(90deg,rgba(255,245,200,.18),transparent 32%),linear-gradient(180deg,rgba(82,42,10,.26),transparent 18%)}.v70-style-folder .v57-award-kicker{color:#241304;text-shadow:none}.v70-style-folder .v57-small,.v70-style-folder .v59-created-by{color:#2b1607}.v70-style-folder .v58-option-card{background:rgba(40,22,8,.72)}
-  .v70-style-brick .v70-poll-card{background:linear-gradient(90deg,rgba(86,24,21,.9),rgba(18,11,10,.95));border-color:rgba(255,86,70,.24);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}.v70-style-brick .v70-poll-card:before{content:"BAR\A WALL";color:#ff7668}.v70-style-brick .v70-poll-card:after{background:repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 2px,transparent 2px 48px),repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 2px,transparent 2px 92px)}.v70-style-brick .v57-award-kicker{color:#ffe08a;text-shadow:2px 2px 0 #000,0 0 9px rgba(255,70,55,.32)}
-  .v70-style-ticket .v70-poll-card{background:linear-gradient(100deg,#f0d59b,#a46b31 54%,#101010 54%);border:2px solid rgba(250,224,164,.62);border-radius:12px;box-shadow:0 16px 30px rgba(0,0,0,.55)}.v70-style-ticket .v70-poll-card:before{content:"ADMIT\A ONE";color:#4b2508;opacity:.15}.v70-style-ticket .v70-poll-card:after{background:radial-gradient(circle at 54% 12px,rgba(0,0,0,.65) 0 9px,transparent 10px),radial-gradient(circle at 54% calc(100% - 12px),rgba(0,0,0,.65) 0 9px,transparent 10px),linear-gradient(90deg,transparent 0 53%,rgba(255,255,255,.3) 53% 53.35%,transparent 53.35%)}.v70-style-ticket .v57-award-kicker{color:#2f1706;text-shadow:none;max-width:55%}.v70-style-ticket .v57-small,.v70-style-ticket .v59-created-by{color:#2e1908}.v70-style-ticket .v58-options{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
-  @media(max-width:760px){.v70-updates{width:calc(100vw - 12px);margin:8px 6px!important;padding:10px!important;border-radius:14px}.v70-style-heading{display:block}.v70-style-sub{text-align:left;margin-top:3px}.v70-style-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.v70-style-chip{font-size:9px;padding:8px 7px}.v70-poll-card{padding:13px;border-radius:14px}.v70-poll-card:before{font-size:64px;right:8px;bottom:5px}.v70-updates .v57-award-kicker{font-size:24px;line-height:1.02}.v70-updates .v58-options{grid-template-columns:1fr;gap:8px}.v70-updates .v58-option-card{min-height:0;padding:10px;border-radius:13px}.v70-updates .v58-option-name{font-size:20px}.v70-updates .v58-tag-zone{padding:6px;min-height:42px}.v70-updates .v58-vote-tag{width:82px;height:32px}.v70-updates .v58-preview-tag{width:118px;height:46px}.v70-updates .v58-selected-preview{min-height:58px;align-items:center}.v70-updates .v58-admin-panel{padding:10px}.v70-style-ticket .v57-award-kicker{max-width:100%;background:rgba(255,238,187,.68);border-radius:9px;padding:7px}.v70-style-coaster .v58-option-card{border-radius:16px}.v70-style-card .v70-poll-card{border-width:4px}.v70-style-folder .v57-small,.v70-style-ticket .v57-small,.v70-style-folder .v59-created-by,.v70-style-ticket .v59-created-by{color:rgba(0,0,0,.8)}}
-  @media(max-width:390px){.v70-style-grid{grid-template-columns:1fr}.v70-updates .v57-title{font-size:34px}.v70-updates .v58-vote-tag{width:74px;height:29px}.v70-updates .v58-option-meta{font-size:9px}}
-
-  /* === V71 dog-tag wall watermark: fixed poll display === */
-  .v70-style-dogtags .v70-poll-card{
-    min-height:520px;
-    padding:clamp(16px,2vw,28px);
-    border-radius:20px;
-    border:1px solid rgba(205,205,190,.24);
-    background:#080909 url('../assets/pool-updates-dogtag-wall.png') center/cover no-repeat;
-    box-shadow:0 18px 40px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.055);
-  }
-  .v70-style-dogtags .v70-poll-card:before{content:"";display:none}
-  .v70-style-dogtags .v70-poll-card:after{
-    content:"";position:absolute;inset:0;z-index:1;pointer-events:none;border-radius:inherit;
-    background:linear-gradient(180deg,rgba(0,0,0,.20),rgba(0,0,0,.46) 42%,rgba(0,0,0,.42)),radial-gradient(circle at 50% 20%,rgba(255,255,210,.08),transparent 45%);
-  }
-  .v70-style-dogtags .v59-created-by{margin:0 0 12px 6px;color:rgba(230,230,210,.74)}
-  .v70-style-dogtags .v57-award-kicker{
-    width:min(940px,100%);min-height:105px;box-sizing:border-box;margin:8px auto 14px;padding:18px 22px;border-radius:13px;
-    background:rgba(5,6,5,.50);border:1px solid rgba(180,180,165,.20);color:#f1ead1;
-    font-family:Impact,"Arial Black",system-ui,sans-serif;text-transform:uppercase;letter-spacing:1.2px;text-align:center;
-    text-shadow:0 2px 0 #000,0 0 12px rgba(255,230,150,.16);display:flex;align-items:center;justify-content:center;
-  }
-  .v70-style-dogtags .v57-small{color:rgba(235,232,210,.78);text-align:center;text-transform:uppercase;letter-spacing:.06em}
-  .v70-style-dogtags .v58-options{display:grid;grid-template-columns:1fr;gap:10px;margin:16px auto 0;width:min(900px,100%)}
-  .v70-style-dogtags .v58-option-card{
-    min-height:74px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:center;
-    border-radius:999px;border:1px solid rgba(220,220,205,.32);background:linear-gradient(180deg,rgba(92,92,84,.82),rgba(36,37,34,.90));
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 8px 14px rgba(0,0,0,.36);padding:11px 17px;color:#eee8d2;
-  }
-  .v70-style-dogtags .v58-option-card.voted-here{border-color:rgba(255,226,135,.94);box-shadow:0 0 0 2px rgba(255,226,135,.16),0 0 22px rgba(255,211,95,.18),inset 0 1px 0 rgba(255,255,255,.16)}
-  .v70-style-dogtags .v58-option-card.voted-here .v58-option-name:after{content:"  ✓ selected — click again to remove";font-family:monospace;font-size:10px;color:#ffe28a;letter-spacing:.04em;white-space:normal}
-  .v70-style-dogtags .v58-option-name{font-family:Impact,"Arial Black",sans-serif;text-transform:uppercase;letter-spacing:1px;font-size:clamp(21px,3vw,34px);line-height:.95;color:#eee8d2;text-shadow:0 2px 1px #000}
-  .v70-style-dogtags .v58-option-meta{justify-self:end;color:#f8e0a4;background:rgba(0,0,0,.46);border:1px solid rgba(255,255,255,.10);border-radius:999px;padding:5px 9px}
-  .v70-style-dogtags .v57-bar{grid-column:1 / -1;height:7px;background:rgba(0,0,0,.46)}
-  .v70-style-dogtags .v58-tag-zone{grid-column:1 / -1;min-height:44px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:5px 2px 0;background:transparent;border:0}
-  .v70-style-dogtags .v58-empty-tags{color:rgba(232,232,210,.46);font-family:monospace;text-transform:uppercase;font-size:10px;letter-spacing:.08em}
-  @media(max-width:760px){
-    .v70-style-dogtags .v70-poll-card{min-height:0;padding:12px;background-position:center top;border-radius:14px}
-    .v70-style-dogtags .v57-award-kicker{min-height:86px;padding:13px 12px;font-size:clamp(21px,7vw,30px);letter-spacing:.7px;line-height:1.02}
-    .v70-style-dogtags .v57-small{font-size:9px;line-height:1.35}
-    .v70-style-dogtags .v58-option-card{grid-template-columns:1fr;gap:5px;min-height:0;padding:10px 12px;border-radius:15px}
-    .v70-style-dogtags .v58-option-name{font-size:23px;line-height:1.02}
-    .v70-style-dogtags .v58-option-card.voted-here .v58-option-name:after{display:block;margin-top:3px;font-size:9px}
-    .v70-style-dogtags .v58-option-meta{justify-self:start;font-size:9px}
-    .v70-style-dogtags .v58-tag-zone{min-height:34px;padding-top:2px}
-  }
-
-
-
-  /* === V72 cleaner Pool Updates cards: no image watermark === */
-  .v70-style-dogtags .v70-poll-card{
-    min-height:0!important;
-    padding:0!important;
-    border-radius:22px!important;
-    overflow:hidden!important;
-    background:
-      linear-gradient(180deg,rgba(22,24,24,.97),rgba(7,8,8,.98))!important;
-    border:1px solid rgba(216,166,76,.34)!important;
-    box-shadow:0 18px 42px rgba(0,0,0,.58),inset 0 0 0 1px rgba(255,255,255,.045)!important;
-  }
-  .v70-style-dogtags .v70-poll-card:before{
-    content:"POOL UPDATE"!important;
-    display:block!important;
-    position:absolute!important;
-    right:18px!important;
-    top:14px!important;
-    z-index:1!important;
-    opacity:.055!important;
-    font-family:Impact,"Arial Black",sans-serif!important;
-    font-size:clamp(56px,10vw,124px)!important;
-    line-height:.85!important;
-    letter-spacing:.03em!important;
-    color:#f3d48a!important;
-    transform:rotate(-3deg)!important;
-    pointer-events:none!important;
-  }
-  .v70-style-dogtags .v70-poll-card:after{
-    content:""!important;
-    position:absolute!important;
-    inset:0!important;
-    z-index:1!important;
-    pointer-events:none!important;
-    border-radius:inherit!important;
-    background:
-      radial-gradient(circle at 18% 0%,rgba(213,157,70,.18),transparent 32%),
-      radial-gradient(circle at 88% 12%,rgba(255,255,255,.07),transparent 26%),
-      repeating-linear-gradient(135deg,rgba(255,255,255,.025) 0 1px,transparent 1px 9px)!important;
-  }
-  .v70-style-dogtags .v70-poll-card > *{position:relative;z-index:2}
-  .v70-style-dogtags .v59-created-by{
-    margin:0!important;
-    padding:12px 16px!important;
-    min-height:44px!important;
-    display:flex!important;
-    align-items:center!important;
-    gap:10px!important;
-    background:linear-gradient(180deg,rgba(213,157,70,.18),rgba(0,0,0,.22))!important;
-    border-bottom:1px solid rgba(213,157,70,.28)!important;
-    color:rgba(255,239,198,.78)!important;
-  }
-  .v70-style-dogtags .v59-creator-tag{width:88px!important;height:35px!important;object-fit:contain!important}
-  .v70-style-dogtags .v57-award-kicker{
-    width:auto!important;
-    min-height:0!important;
-    margin:0!important;
-    padding:20px 18px 10px!important;
-    background:transparent!important;
-    border:0!important;
-    color:#ffe6a3!important;
-    font-family:Impact,"Arial Black",system-ui,sans-serif!important;
-    text-transform:uppercase!important;
-    letter-spacing:1.1px!important;
-    text-align:left!important;
-    text-shadow:0 3px 0 #000,0 0 14px rgba(255,208,93,.16)!important;
-    display:block!important;
-    line-height:1.02!important;
-    max-width:none!important;
-  }
-  .v70-style-dogtags .v57-small{
-    margin:0 18px 14px!important;
-    color:rgba(245,230,194,.70)!important;
-    text-align:left!important;
-    font-family:monospace!important;
-    font-size:10px!important;
-    line-height:1.45!important;
-    text-transform:uppercase!important;
-    letter-spacing:.055em!important;
-  }
-  .v70-style-dogtags .v58-options{
-    display:grid!important;
-    grid-template-columns:repeat(auto-fit,minmax(230px,1fr))!important;
-    gap:12px!important;
-    margin:0!important;
-    width:auto!important;
-    padding:0 16px 16px!important;
-  }
-  .v70-style-dogtags .v58-option-card{
-    min-height:152px!important;
-    display:flex!important;
-    flex-direction:column!important;
-    align-items:stretch!important;
-    gap:9px!important;
-    border-radius:16px!important;
-    border:1px solid rgba(213,157,70,.28)!important;
-    background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(0,0,0,.54))!important;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 20px rgba(0,0,0,.34)!important;
-    padding:12px!important;
-    color:#f2ddad!important;
-    text-align:left!important;
-  }
-  .v70-style-dogtags .v58-option-card:hover{transform:translateY(-1px)!important;border-color:rgba(255,220,135,.74)!important}
-  .v70-style-dogtags .v58-option-card.voted-here{
-    border-color:rgba(255,226,135,.95)!important;
-    background:linear-gradient(180deg,rgba(213,157,70,.24),rgba(0,0,0,.58))!important;
-    box-shadow:0 0 0 2px rgba(255,226,135,.14),0 0 24px rgba(255,211,95,.13),inset 0 1px 0 rgba(255,255,255,.12)!important;
-  }
-  .v70-style-dogtags .v58-option-name{
-    font-size:clamp(21px,2.6vw,30px)!important;
-    line-height:.98!important;
-    color:#ffe08a!important;
-    overflow-wrap:anywhere!important;
-  }
-  .v70-style-dogtags .v58-option-card.voted-here .v58-option-name:after{
-    content:""!important;
-    display:none!important;
-  }
-  .v70-style-dogtags .v58-option-meta{
-    justify-self:auto!important;
-    display:flex!important;
-    justify-content:space-between!important;
-    gap:10px!important;
-    width:100%!important;
-    box-sizing:border-box!important;
-    color:rgba(255,241,205,.78)!important;
-    background:rgba(0,0,0,.30)!important;
-    border:1px solid rgba(255,255,255,.08)!important;
-    border-radius:999px!important;
-    padding:6px 9px!important;
-  }
-  .v70-style-dogtags .v57-bar{height:8px!important;background:rgba(0,0,0,.46)!important;border-radius:999px!important;overflow:hidden!important}
-  .v70-style-dogtags .v58-tag-zone{
-    flex:1!important;
-    min-height:48px!important;
-    display:flex!important;
-    align-items:center!important;
-    align-content:flex-start!important;
-    gap:7px!important;
-    flex-wrap:wrap!important;
-    padding:8px!important;
-    background:rgba(0,0,0,.22)!important;
-    border:1px dashed rgba(255,255,255,.14)!important;
-    border-radius:12px!important;
-  }
-  .v70-style-dogtags .v58-vote-tag{width:98px!important;height:39px!important;object-fit:contain!important;filter:drop-shadow(0 7px 8px rgba(0,0,0,.58))!important}
-  .v70-style-dogtags .v58-empty-tags{color:rgba(255,255,255,.40)!important;font-family:monospace!important;text-transform:uppercase!important;font-size:10px!important;letter-spacing:.07em!important}
-  .v70-style-dogtags .v58-vote-top{margin:12px 0 14px!important}
-  .v70-style-dogtags .v58-admin-panel{border-color:rgba(213,157,70,.24)!important;background:rgba(0,0,0,.30)!important}
-  @media(max-width:760px){
-    .v70-updates{width:calc(100vw - 10px)!important;margin:6px 5px!important;padding:9px!important}
-    .v70-style-dogtags .v70-poll-card{border-radius:16px!important}
-    .v70-style-dogtags .v70-poll-card:before{font-size:48px!important;right:10px!important;top:10px!important}
-    .v70-style-dogtags .v59-created-by{padding:9px 10px!important;gap:7px!important;flex-wrap:wrap!important;font-size:9px!important}
-    .v70-style-dogtags .v59-creator-tag{width:74px!important;height:29px!important}
-    .v70-style-dogtags .v57-award-kicker{padding:15px 12px 7px!important;font-size:clamp(23px,7.6vw,32px)!important;letter-spacing:.7px!important;line-height:1.02!important}
-    .v70-style-dogtags .v57-small{margin:0 12px 10px!important;font-size:9px!important;line-height:1.38!important}
-    .v70-style-dogtags .v58-options{grid-template-columns:1fr!important;gap:9px!important;padding:0 10px 10px!important}
-    .v70-style-dogtags .v58-option-card{min-height:0!important;padding:10px!important;border-radius:13px!important;gap:7px!important}
-    .v70-style-dogtags .v58-option-name{font-size:22px!important;line-height:1.02!important}
-    .v70-style-dogtags .v58-option-meta{font-size:9px!important;padding:5px 8px!important}
-    .v70-style-dogtags .v58-tag-zone{min-height:38px!important;padding:6px!important;gap:5px!important}
-    .v70-style-dogtags .v58-vote-tag{width:76px!important;height:30px!important}
-  }
-
-</style>
-<script>
-(function(){
-  const STATE={questions:null,error:null,loading:false,shared:false,lastLoaded:null,autoTimer:null,lastFingerprint:''};
-  const SELECT_PREFIX='poolUpdates:v59:selectedTeam:';
-  function esc(x){return String(x??'').replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
-  function norm(x){return String(x||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'');}
-  function poolName(){try{return typeof V57_POOL_NAME!=='undefined'?V57_POOL_NAME:(document.title||'Pool');}catch(e){return document.title||'Pool';}}
-  function poolSlug(){const p=poolName(); return /forever/i.test(p)?'forever':'bbl';}
-
-  const V70_STYLE_OPTIONS=[['chalkboard','Neon Chalkboard'],['trophy','Trophy Plaque'],['dogtags','Dog Tag Wall'],['card','Hockey Card'],['jumbotron','Jumbotron'],['coaster','Beer Coaster'],['locker','Locker Room'],['folder','Draft Folder'],['brick','Graffiti Brick'],['ticket','Ticket Stub']];
-  function v70StyleKey(){return 'poolUpdates:v70:cardStyle:'+poolSlug();}
-  function v70ActiveStyle(){return 'dogtags';}
-  function v70StyleSelectorHtml(){return '';}
-  window.v70SetPoolStyle=function(id){try{if(V70_STYLE_OPTIONS.some(x=>x[0]===id))localStorage.setItem(v70StyleKey(),id);}catch(e){} render();};
-  function selectedKey(){return SELECT_PREFIX + poolSlug();}
-  function teams(){try{if(typeof TEAMS!=='undefined'&&Array.isArray(TEAMS))return TEAMS;}catch(e){} try{if(typeof DATA!=='undefined'&&DATA&&Array.isArray(DATA.teams))return DATA.teams;}catch(e){} return [];}
-  function teamName(t){return String((t&&t.name)||'');}
-  function teamKey(t){return String((t&&t.id)||teamName(t));}
-  function teamByKey(key){return teams().find(t=>teamKey(t)===key)||teams().find(t=>norm(teamName(t))===norm(key))||null;}
-  function dogSrc(t){const nm=teamName(t); try{if(typeof dogtagSrc==='function'){const s=dogtagSrc(t); if(s)return s;}}catch(e){} try{if(typeof DOGTAGS!=='undefined'&&DOGTAGS&&DOGTAGS[nm])return DOGTAGS[nm];}catch(e){} return (t&&t.dogtag)||'';}
-  function selectedTeam(){try{return localStorage.getItem(selectedKey())||'';}catch(e){return '';}}
-  function selectedTeamObj(){return teamByKey(selectedTeam());}
-  function validTeamIds(){return new Set(teams().map(teamKey));}
-  function tagHtmlById(id,name){const t=teamByKey(id); if(t){const src=dogSrc(t), nm=teamName(t); return src?`<img class="v58-vote-tag" src="${esc(src)}" title="${esc(nm)}" alt="${esc(nm)} dog tag" loading="lazy">`:`<span class="v58-vote-fallback" title="${esc(nm)}">${esc(nm)}</span>`;} return `<span class="v58-vote-fallback" title="${esc(name||id)}">${esc(name||id)}</span>`;}
-  function creatorHtml(q){const t=teamByKey(q.creatorTeamId); const src=t?dogSrc(t):''; const nm=(t?teamName(t):q.creatorTeamName)||'Commissioner'; return `<div class="v59-created-by"><span>Created by</span>${src?`<img class="v59-creator-tag" src="${esc(src)}" alt="${esc(nm)} dog tag" loading="lazy">`:`<span class="v58-vote-fallback">${esc(nm)}</span>`}<span>${esc(nm)}</span></div>`;}
-  function identityHtml(){const t=selectedTeamObj(); const preview=t?(dogSrc(t)?`<img class="v58-preview-tag" src="${esc(dogSrc(t))}" alt="${esc(teamName(t))} dog tag" loading="lazy"><span>Entered as <b>${esc(teamName(t))}</b>. Votes and new posts will use this team.</span>`:`<b>${esc(teamName(t))}</b><span> entered. Votes and new posts will use this team.</span>`):'<span>No team selected yet. Use Leave Bar, pick your team at the front door, then come back to Pool Updates.</span>'; return `<div class="v58-vote-top"><div class="v58-selected-preview">${preview}</div></div>`;}
-  function v59QuestionKind(){return document.getElementById('v59QuestionKind')?.value||'poll';}
-  window.v59ToggleQuestionKind=function(){const kind=v59QuestionKind(); const box=document.getElementById('v57Options'); const hint=document.getElementById('v59OptionsHint'); if(!box)return; if(kind==='suggestion'){box.placeholder='Optional. Leave blank to use: Support it, Not for me, Needs discussion'; if(hint)hint.textContent='Suggestion mode can use the default voting choices, or you can type your own comma-separated choices.';} else {box.placeholder='Options separated by commas, ex: Yes, No, Maybe'; if(hint)hint.textContent='Poll mode needs at least two comma-separated choices.';}};
-  async function api(action,payload){const res=await fetch('/api/pool-updates?pool='+encodeURIComponent(poolSlug()),{method:action?'POST':'GET',headers:{'Content-Type':'application/json'},cache:'no-store',body:action?JSON.stringify(Object.assign({action,pool:poolSlug()},payload||{})):undefined}); const js=await res.json().catch(()=>({ok:false,error:'Bad JSON response'})); if(!res.ok||!js.ok)throw Object.assign(new Error(js.error||('HTTP '+res.status)),{payload:js,status:res.status}); return js;}
-  function isEditingPost(){const a=document.activeElement; return !!(a&&['v57Question','v57Options','v59QuestionKind'].includes(a.id));}
-  async function loadShared(force,silent){if(STATE.loading&&(silent||!force))return; const before=STATE.lastFingerprint||JSON.stringify({questions:STATE.questions,shared:STATE.shared,error:STATE.error}); let shouldRender=!silent; if(!silent){STATE.loading=true; STATE.error=null;} try{const js=await api(); const next=Array.isArray(js.questions)?js.questions:[]; const fp=JSON.stringify({questions:next,shared:!!js.shared,error:null}); STATE.questions=next; STATE.shared=!!js.shared; STATE.error=null; STATE.lastLoaded=new Date(); STATE.lastFingerprint=fp; if(silent)shouldRender=(fp!==before)&&!isEditingPost();}catch(e){const msg=e.message||String(e); const next=(e.payload&&Array.isArray(e.payload.questions))?e.payload.questions:null; const fp=JSON.stringify({questions:next,shared:false,error:msg}); STATE.error=msg; STATE.questions=next; STATE.shared=false; STATE.lastFingerprint=fp; if(silent)shouldRender=(fp!==before)&&!isEditingPost();} finally{if(!silent)STATE.loading=false; if(shouldRender&&typeof view!=='undefined'&&view==='poolupdates')render();}}
-  function startAutoRefresh(){if(STATE.autoTimer)return; STATE.autoTimer=setInterval(()=>{try{if(typeof view!=='undefined'&&view==='poolupdates')loadShared(true,true);}catch(e){}},8000);}
-  function questionCard(q){const valid=validTeamIds(); const rawVotes=q.votes||{}; const entries=Object.entries(rawVotes).map(([teamId,v])=>({teamId, option:typeof v==='string'?v:v&&v.option, teamName:typeof v==='object'?(v.teamName||teamId):teamId})).filter(v=>valid.has(v.teamId)&&(q.options||[]).includes(v.option)); const total=entries.length; const selected=selectedTeam(); const optionCards=(q.options||[]).map(opt=>{const voters=entries.filter(v=>v.option===opt); const count=voters.length,pct=total?Math.round(count/total*100):0; const here=selected&&rawVotes[selected]&&((typeof rawVotes[selected]==='string'?rawVotes[selected]:rawVotes[selected].option)===opt); const tags=voters.length?voters.map(v=>tagHtmlById(v.teamId,v.teamName)).join(''):'<span class="v58-empty-tags">No dog tags here yet</span>'; return `<button type="button" class="v58-option-card${here?' voted-here':''}" onclick="v59CastTeamVote('${esc(q.id)}','${esc(opt)}')"><div class="v58-option-name">${esc(opt)}</div><div class="v58-option-meta"><span>${count} vote${count===1?'':'s'}</span><span>${pct}%</span></div><span class="v57-bar"><span class="v57-fill" style="width:${pct}%"></span></span><div class="v58-tag-zone">${tags}</div></button>`;}).join(''); return `<article class="v57-question-card v70-poll-card">${creatorHtml(q)}<div class="v57-award-kicker">${esc(q.question)}</div><div class="v57-small">${total} team vote${total===1?'':'s'} · click an option to place your dog tag. Click another option to change it, or click your selected option again to remove it.</div><div class="v58-options">${optionCards}</div></article>`;}
+  function questionCard(q){const valid=validTeamIds(); const rawVotes=q.votes||{}; const entries=Object.entries(rawVotes).map(([teamId,v])=>({teamId, option:typeof v==='string'?v:v&&v.option, teamName:typeof v==='object'?(v.teamName||teamId):teamId})).filter(v=>valid.has(v.teamId)&&(q.options||[]).includes(v.option)); const total=entries.length; const selected=selectedTeam(); const optionCards=(q.options||[]).map(opt=>{const voters=entries.filter(v=>v.option===opt); const count=voters.length,pct=total?Math.round(count/total*100):0; const here=selected&&rawVotes[selected]&&((typeof rawVotes[selected]==='string'?rawVotes[selected]:rawVotes[selected].option)===opt); const tags=voters.length?voters.map(v=>tagHtmlById(v.teamId,v.teamName)).join(''):'<span class="v58-empty-tags">No dog tags here yet</span>'; return `<button type="button" class="v58-option-card${here?' voted-here':''}" onclick="v59CastTeamVote('${esc(q.id)}','${esc(opt)}')"><div class="v58-option-name">${esc(opt)}</div><div class="v58-option-meta"><span>${count} vote${count===1?'':'s'}</span><span>${pct}%</span></div><span class="v57-bar"><span class="v57-fill" style="width:${pct}%"></span></span><div class="v58-tag-zone">${tags}</div></button>`;}).join(''); return `<article class="v57-question-card v70-poll-card"><div class="v76-card-tools"><button type="button" class="v76-remove-poll" onclick="v59RemovePoll('${esc(q.id)}')">Remove Poll</button></div>${creatorHtml(q)}<div class="v57-award-kicker">${esc(q.question)}</div><div class="v57-small">${total} team vote${total===1?'':'s'} · click an option to place your dog tag. Click another option to change it, or click your selected option again to remove it.</div><div class="v58-options">${optionCards}</div></article>`;}
     function buildPage(){startAutoRefresh(); if(STATE.questions===null&&!STATE.loading&&!STATE.error)setTimeout(()=>loadShared(false),0); const qs=Array.isArray(STATE.questions)?STATE.questions:[]; const style=v70ActiveStyle(); const status=STATE.loading?'<div class="v59-status">Loading shared questions...</div>':STATE.error?`<div class="v59-status bad">Shared storage is not active yet: ${esc(STATE.error)}</div>`:STATE.shared?'<div class="v59-status good">Shared voting is active. Questions and votes update automatically from the API.</div>':'<div class="v59-status warn">Shared mode unavailable.</div>'; const autoNote=STATE.shared?'<div class="v59-auto-note">Auto-refresh is on. New questions and vote changes check quietly every few seconds.</div>':''; const selected=selectedTeamObj(); const byline=selected?`Posting as ${esc(teamName(selected))}.`:'No team selected. Use Leave Bar and re-enter through the front door before posting or voting.'; return `<div class="v57-page${STATE.loading?' v59-loading':''} v70-updates v70-style-${esc(style)}"><div class="v57-title">Pool Updates</div><div class="v57-note">You enter this room as the team you picked at the front door. Submit a suggestion or poll, then every team can vote once, change its vote, or click the same option again to remove its vote.</div>${status}${identityHtml()}${autoNote}<div id="v57Questions">${qs.length?qs.map(questionCard).join(''):'<div class="v57-empty">No shared questions found yet.</div>'}</div><div class="v58-admin-panel"><div class="v58-admin-label">Submit a suggestion or poll</div><div class="v59-create-by"><div><label class="v58-admin-label" for="v59QuestionKind">Post type</label><select id="v59QuestionKind" onchange="v59ToggleQuestionKind()"><option value="poll">Poll with custom options</option><option value="suggestion">Suggestion with simple voting</option></select></div><div class="v57-small">${byline} The creator team dog tag will display on the post.</div></div><div class="v58-admin-grid"><div><textarea id="v57Question" placeholder="Type your suggestion or poll question"></textarea><input id="v57Options" placeholder="Options separated by commas, ex: Yes, No, Maybe"><div id="v59OptionsHint" class="v57-small">Poll mode needs at least two comma-separated choices.</div></div><button class="v57-button" onclick="v59AddQuestion()">Submit</button></div></div></div>`;}
     window.v59SelectTeam=function(key){try{localStorage.setItem(selectedKey(),key||'');}catch(e){} render();};
   window.v58SelectTeam=window.v59SelectTeam;
@@ -5678,6 +5287,8 @@ loadFantraxApiPatch();
   window.v57AddQuestion=window.v59AddQuestion;
   window.v59CastTeamVote=async function(id,opt){const t=selectedTeamObj(); if(!t){alert('No team is selected. Use Leave Bar, pick your team at the front door, then come back.');return;} const key=teamKey(t); const q=(Array.isArray(STATE.questions)?STATE.questions:[]).find(x=>String(x.id)===String(id)); const current=q&&q.votes&&q.votes[key]; const currentOpt=typeof current==='string'?current:current&&current.option; const action=currentOpt===opt?'removeVote':'vote'; STATE.loading=true; render(); try{const js=await api(action,{questionId:id,option:opt,teamId:key,teamName:teamName(t)}); STATE.questions=js.questions||[]; STATE.shared=!!js.shared; STATE.error=null;}catch(e){STATE.error=e.message||String(e);} finally{STATE.loading=false; render();}};
   window.v58CastTeamVote=window.v59CastTeamVote;
+  window.v59RemovePoll=async function(id){const t=selectedTeamObj(); if(!confirm('Remove this poll for everyone? This cannot be undone.'))return; STATE.loading=true; render(); try{const js=await api('removeQuestion',{questionId:id,teamId:t?teamKey(t):'',teamName:t?teamName(t):''}); STATE.questions=js.questions||[]; STATE.shared=!!js.shared; STATE.error=null;}catch(e){STATE.error=e.message||String(e);} finally{STATE.loading=false; render();}};
+  window.v57RemovePoll=window.v59RemovePoll;
   const oldRender=window.render;
   window.render=function(){try{if(typeof view!=='undefined'&&view==='poolupdates'){const board=document.getElementById('board'); if(board){board.innerHTML=buildPage(); return;}}}catch(e){} return oldRender&&oldRender.apply(this,arguments);};
   function boot(){startAutoRefresh(); setTimeout(()=>{if(typeof view!=='undefined'&&view==='poolupdates')loadShared(true,false);},300);} if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
@@ -6502,4 +6113,57 @@ loadFantraxApiPatch();
     .v70-style-dogtags .v58-vote-tag{width:58px!important;height:23px!important;}
   }
 </style>
+
+<!-- === V76 Pool Updates: real manager photo + remove poll control === -->
+<style>
+  .v70-style-dogtags .v57-award-kicker:after{
+    background:url('../assets/pool-updates-angry-manager.png') center 32%/cover no-repeat!important;
+    width:82px!important;
+    height:82px!important;
+    border-radius:999px!important;
+    border:1px solid rgba(245,211,122,.48)!important;
+    box-shadow:0 8px 14px rgba(0,0,0,.72),inset 0 0 0 2px rgba(0,0,0,.38)!important;
+    opacity:.82!important;
+    filter:saturate(.82) contrast(1.08) brightness(.92) drop-shadow(0 8px 8px rgba(0,0,0,.65))!important;
+  }
+  .v70-style-dogtags .v76-card-tools{
+    display:flex!important;
+    justify-content:flex-end!important;
+    align-items:center!important;
+    margin:-3px 0 8px!important;
+    min-height:26px!important;
+  }
+  .v70-style-dogtags .v76-remove-poll{
+    appearance:none!important;
+    border:1px solid rgba(239,92,82,.38)!important;
+    border-radius:999px!important;
+    background:linear-gradient(180deg,rgba(86,20,18,.78),rgba(12,8,8,.72))!important;
+    color:#ffd4ce!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 14px rgba(0,0,0,.25)!important;
+    padding:6px 10px!important;
+    font-family:"Barlow Condensed","Arial Narrow",Impact,sans-serif!important;
+    font-size:12px!important;
+    font-weight:800!important;
+    letter-spacing:.09em!important;
+    line-height:1!important;
+    text-transform:uppercase!important;
+    cursor:pointer!important;
+    touch-action:manipulation!important;
+  }
+  .v70-style-dogtags .v76-remove-poll:hover,
+  .v70-style-dogtags .v76-remove-poll:focus-visible{
+    border-color:rgba(255,148,132,.78)!important;
+    color:#fff!important;
+    transform:translateY(-1px)!important;
+  }
+  @media(max-width:760px){
+    .v70-style-dogtags .v76-card-tools{margin:-1px 0 7px!important;justify-content:flex-end!important;}
+    .v70-style-dogtags .v76-remove-poll{font-size:11px!important;padding:7px 10px!important;}
+    .v70-style-dogtags .v57-award-kicker:after{right:10px!important;width:58px!important;height:58px!important;opacity:.78!important;}
+  }
+  @media(max-width:390px){
+    .v70-style-dogtags .v57-award-kicker:after{width:52px!important;height:52px!important;}
+  }
+</style>
+
 

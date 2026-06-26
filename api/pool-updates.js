@@ -163,6 +163,16 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, pool, shared: true, questions, item });
     }
 
+    if (action === 'removeQuestion' || action === 'removePoll') {
+      const questionId = safeText(body.questionId, 80);
+      const removedByTeamId = safeText(body.teamId, 80);
+      const index = questions.findIndex(x => String(x.id) === questionId);
+      if (index < 0) return res.status(404).json({ ok: false, error: 'Question not found.' });
+      questions.splice(index, 1);
+      await saveQuestions(pool, questions);
+      return res.status(200).json({ ok: true, pool, shared: true, removedByTeamId, questions });
+    }
+
     if (action === 'vote' || action === 'removeVote') {
       const questionId = safeText(body.questionId, 80);
       const teamId = safeText(body.teamId, 80);
