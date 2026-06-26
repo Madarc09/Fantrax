@@ -82,3 +82,11 @@ V67 entrance/team-selection update:
 - The selected team is also written into the Pool Updates team-selection keys, so Pool Updates opens as that team.
 - The bar Rankings page auto-opens the selected team's trophy case.
 - Clicking Leave Bar clears the remembered team choice so the next visit starts fresh.
+
+V67B / V68 POOL UPDATES TEAM ENTRY NOTE
+- Pool Updates no longer shows its own team selector.
+- The team picked on the main front-door page is saved in browser localStorage for that pool visit.
+- Pool Updates reads that selected team and uses it for votes and for new suggestions/polls.
+- Suggestions use default vote options if no custom options are entered: Support it, Not for me, Needs discussion.
+- Polls still use comma-separated options typed by the submitting team.
+- The old fallback ticker sample poll was removed from api/pool-updates.js so removed ticker content does not reappear.

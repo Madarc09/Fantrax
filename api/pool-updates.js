@@ -6,28 +6,8 @@
 //   KV_REST_API_URL and KV_REST_API_TOKEN
 
 const DEFAULT_QUESTIONS = {
-  bbl: [
-    {
-      id: 'seed_bbl_awards_ticker',
-      question: 'Should we use NHL award winners on the ticker all offseason?',
-      options: ['Yes', 'No', 'Only until draft day'],
-      creatorTeamId: 'commissioner',
-      creatorTeamName: 'Commissioner',
-      createdAt: '2026-06-11T00:00:00.000Z',
-      votes: {}
-    }
-  ],
-  forever: [
-    {
-      id: 'seed_forever_awards_ticker',
-      question: 'Should we use NHL award winners on the ticker all offseason?',
-      options: ['Yes', 'No', 'Only until draft day'],
-      creatorTeamId: 'commissioner',
-      creatorTeamName: 'Commissioner',
-      createdAt: '2026-06-11T00:00:00.000Z',
-      votes: {}
-    }
-  ]
+  bbl: [],
+  forever: []
 };
 
 function cleanPool(value) {
