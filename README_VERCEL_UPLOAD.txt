@@ -141,3 +141,11 @@ V74 - Pool Updates visual correction
 - Added a final V74 CSS override after the older blocks so the live page matches the intended Barlow Condensed hockey-poll card more closely.
 - Poll questions and options remain real HTML text from the API/submission form, not baked into images or watermarks.
 - Mobile layout is optimized as fast tap-to-vote cards, with dog-tag voter markers preserved under each option and horizontally scrollable on small screens.
+
+V75 POOL UPDATES TRUE HOCKEY CARD STYLE
+- Rebuilt the Pool Updates poll card styling from scratch to better match the Barlow mockup image.
+- Poll cards now use a real bordered hockey-card panel with gold trim, corner rivets, a POOL UPDATES header plaque, and a hockey-player silhouette SVG detail.
+- The question and option text remains live HTML from the submitted poll/suggestion; no question text is baked into an image.
+- Vote options are compact regulated rows instead of oversized cards, with colored left stripes, percentage badges, progress bars, and dog-tag vote slots.
+- Mobile layout is optimized as thumb-friendly tap rows with horizontal dog-tag strips and compact percentage badges.
+- Voting behavior is unchanged: click/tap an option to vote, another option to change, or the selected option again to remove your vote.
