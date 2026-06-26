@@ -96,3 +96,20 @@ V69 Pool Updates Auto-Refresh
 - Removed the visible "Refresh Questions" button from Pool Updates.
 - Pool Updates now auto-checks the shared Redis/API data about every 8 seconds while someone is viewing that room.
 - The auto-refresh is quiet: it only redraws the room when questions/votes actually changed, and it avoids wiping the post form while someone is actively typing a new suggestion/poll.
+
+V70 - Pool Updates style lab and mobile cleanup
+- Added a Pool Updates "Question Display Style" picker with 10 different card designs:
+  1. Neon Chalkboard
+  2. Trophy Plaque
+  3. Dog Tag Wall
+  4. Hockey Card
+  5. Jumbotron
+  6. Beer Coaster
+  7. Locker Room
+  8. Draft Folder
+  9. Graffiti Brick
+  10. Ticket Stub
+- Each style uses a different CSS watermark/backdrop treatment behind poll questions.
+- The selected style is saved in localStorage per pool/browser, so the page remembers the design choice during normal browsing.
+- Mobile layout was tightened: smaller page margins, single-column poll options, smaller dog tags, compressed style picker, and more forgiving wrapping for long option text.
+- Auto-refresh behavior from V69 remains unchanged.
