@@ -121,3 +121,9 @@ V71 Pool Updates dog-tag wall + vote removal
 - The question/options are still real HTML text over the image, not baked into the image, so new API poll text fits dynamically.
 - Vote behavior now toggles: clicking a different option changes your vote; clicking your already-selected option removes your dog tag/vote.
 - API action removeVote was added to /api/pool-updates.js.
+
+
+V72 - Pool Updates cleaner card layout
+- Replaced the dog-tag-wall image watermark approach with a cleaner live HTML/CSS poll-card design.
+- Kept the dog tag voting behavior, auto-refresh, shared Redis voting, and click-same-option-to-remove-vote behavior from V71.
+- The poll card now uses a dark metal/gold bar theme with clearer question text and responsive option cards, so dynamic API text fits better on desktop and mobile.
