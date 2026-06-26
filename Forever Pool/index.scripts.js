@@ -669,6 +669,7 @@ async function loadFantraxApiPatch(){
 ctrl();render();
 loadFantraxApiPatch();
 
+;
 
 (function(){
   const TRADE_ENDPOINT_CANDIDATES=["transactions","trades","getTransactions","getTransactionHistory","getLeagueTransactions","getLeagueActivity","getActivity","getTransactionLog"];
@@ -901,6 +902,7 @@ loadFantraxApiPatch();
   };
 })();
 
+;
 
 (function(){
   const PLAYER_CACHE={loaded:false,loading:false,map:{},error:null,source:""};
@@ -1015,6 +1017,7 @@ loadFantraxApiPatch();
   };
 })();
 
+;
 
 (function(){
   const PLAYER_CACHE_V8={loaded:false,loading:false,map:{},source:"",error:null};
@@ -1124,6 +1127,7 @@ loadFantraxApiPatch();
   }
 })();
 
+;
 
 (function(){
   function clean(v){return String(v??"").replace(/â€™/g,"'").replace(/[’`]/g,"'").replace(/\s+/g," ").trim();}
@@ -1197,6 +1201,7 @@ loadFantraxApiPatch();
   document.addEventListener("DOMContentLoaded",()=>{const t=document.getElementById("tabTrade"); if(t)t.textContent="Matchup History";});
 })();
 
+;
 
 (function(){
   const CURRENT_SEASON_LABEL = 'Current API Season';
@@ -1286,6 +1291,7 @@ loadFantraxApiPatch();
   };
 })();
 
+;
 
 (function(){
   const CURRENT_API_SEASON = (typeof FANTRAX_LIVE!=='undefined' && FANTRAX_LIVE.seasonKey) ? FANTRAX_LIVE.seasonKey : '2025/26';
@@ -1314,6 +1320,7 @@ loadFantraxApiPatch();
   document.addEventListener('DOMContentLoaded',()=>{const t=document.getElementById('tabTrade'); if(t)t.textContent='Matchup History';});
 })();
 
+;
 
 (function(){
   const CURRENT_API_SEASON = (typeof FANTRAX_LIVE !== 'undefined' && FANTRAX_LIVE.seasonKey) ? FANTRAX_LIVE.seasonKey : '2025/26';
@@ -1343,6 +1350,7 @@ loadFantraxApiPatch();
   document.addEventListener('DOMContentLoaded',()=>{const t=document.getElementById('tabTrade'); if(t)t.textContent='Matchup History';});
 })();
 
+;
 
 (function(){
   const esc2 = window.esc || function(v){return String(v ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));};
@@ -1455,6 +1463,7 @@ loadFantraxApiPatch();
   document.addEventListener('DOMContentLoaded',()=>{const t=document.getElementById('tabTrade'); if(t)t.textContent='Matchup History';});
 })();
 
+;
 
 (function(){
   const LEAGUE_KEY = "forever";
@@ -1488,6 +1497,7 @@ loadFantraxApiPatch();
   document.addEventListener('DOMContentLoaded',()=>{ensureTabs(); try{document.querySelectorAll('.api-roster-note').forEach(n=>{if(/Click row to view current Fantrax roster/i.test(n.textContent))n.textContent='Current Fantrax roster only — historic best-season rosters are not exposed by the public API yet.';});}catch(e){} });
 })();
 
+;
 
 (function(){
   const h=v=>String(v??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -1554,6 +1564,7 @@ loadFantraxApiPatch();
   document.addEventListener('DOMContentLoaded',()=>{const api=document.getElementById('tabApiCheck'); if(api)api.remove(); setTimeout(updateTickerV16,650);});
 })();
 
+;
 
 (function(){
   const h=v=>String(v??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -1606,6 +1617,7 @@ loadFantraxApiPatch();
   document.addEventListener('DOMContentLoaded',()=>{setTimeout(updateTickerV17,900);});
 })();
 
+;
 
 (function(){
   const LOCAL_DRAFT_TICKER = [{"pick": 1, "label": "1st pick: NG United (originally owned by Dish)"}, {"pick": 2, "label": "2nd pick: NG United (originally owned by Mats Your Soup is Ready)"}, {"pick": 3, "label": "3rd pick: Team Trash (originally owned by Team Trash)"}, {"pick": 4, "label": "4th pick: Dish (originally owned by No Regretzky's)"}, {"pick": 5, "label": "5th pick: The Kings Cowboys (originally owned by Red Dragon)"}, {"pick": 6, "label": "6th pick: Dish (originally owned by North Kariya)"}, {"pick": 7, "label": "7th pick: Red Dragon (originally owned by Cujo)"}, {"pick": 8, "label": "8th pick: Dish (originally owned by The Kings Cowboys)"}, {"pick": 9, "label": "9th pick: NG United (originally owned by NG United)"}, {"pick": 10, "label": "10th pick: Blues Brothers (originally owned by Blues Brothers)"}, {"pick": 11, "label": "11th pick: Dish (originally owned by Don's Cherry Pickers)"}, {"pick": 12, "label": "12th pick: Team Trash (originally owned by Damo's Dusters)"}];
@@ -1641,6 +1653,7 @@ loadFantraxApiPatch();
   else setTimeout(window.updateTickerV18,250);
 })();
 
+;
 
 (function(){
   function forceTickerFourCopies(){
@@ -1671,6 +1684,7 @@ loadFantraxApiPatch();
   else setTimeout(window.updateTickerV20,350);
 })();
 
+;
 
 (function(){
   function getBaseTickerHTML(el){
@@ -1733,6 +1747,7 @@ loadFantraxApiPatch();
   else setTimeout(window.updateTickerV21,500);
 })();
 
+;
 
 (function(){
   function escLocal(x){
@@ -1794,6 +1809,7 @@ loadFantraxApiPatch();
   else setTimeout(window.updateTickerV22,900);
 })();
 
+;
 
 (function(){
   function escLocal(x){
@@ -1883,6 +1899,7 @@ loadFantraxApiPatch();
   else {setTimeout(mountTickerV23,300);setTimeout(mountTickerV23,1600);}
 })();
 
+;
 
 (function(){
   function escLocal(x){
@@ -1978,6 +1995,7 @@ loadFantraxApiPatch();
   else setTimeout(mountLivewireFlipV24,550);
 })();
 
+;
 
 (function(){
   const MH_POOL_KEY='forever';
@@ -2033,6 +2051,7 @@ loadFantraxApiPatch();
   window.mhSeasonBreakdown=mhSeasonBreakdown; window.mhOpponentRanks=mhOpponentRanks; window.mhRivalryRanks=mhRivalryRanks; window.mhSpecialGames=mhSpecialGames;
 })();
 
+;
 
 (function(){
   function v29Esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
@@ -2099,6 +2118,7 @@ loadFantraxApiPatch();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',removeMatchupsTabV29); else removeMatchupsTabV29();
 })();
 
+;
 
 /* v37: static split hockey card image assets for Forever Pool */
 (function(){
@@ -2137,6 +2157,7 @@ loadFantraxApiPatch();
   };
 })();
 
+;
 
 (function(){
   const V57_POOL_NAME = "Forever Pool";
@@ -2234,6 +2255,7 @@ loadFantraxApiPatch();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{addTabs();}); else {addTabs();} setTimeout(()=>{try{ctrl();}catch(e){}},600);
 })();
 
+;
 
 (function(){
   const V58_STORE_PREFIX = 'poolUpdates:v57:';
@@ -2313,6 +2335,7 @@ loadFantraxApiPatch();
   };
 })();
 
+;
 
 (function(){
   const STATE={questions:null,error:null,loading:false,shared:false,lastLoaded:null,autoTimer:null,lastFingerprint:''};
@@ -2345,7 +2368,7 @@ loadFantraxApiPatch();
   function isEditingPost(){const a=document.activeElement; return !!(a&&['v57Question','v57Options','v59QuestionKind'].includes(a.id));}
   async function loadShared(force,silent){if(STATE.loading&&(silent||!force))return; const before=STATE.lastFingerprint||JSON.stringify({questions:STATE.questions,shared:STATE.shared,error:STATE.error}); let shouldRender=!silent; if(!silent){STATE.loading=true; STATE.error=null;} try{const js=await api(); const next=Array.isArray(js.questions)?js.questions:[]; const fp=JSON.stringify({questions:next,shared:!!js.shared,error:null}); STATE.questions=next; STATE.shared=!!js.shared; STATE.error=null; STATE.lastLoaded=new Date(); STATE.lastFingerprint=fp; if(silent)shouldRender=(fp!==before)&&!isEditingPost();}catch(e){const msg=e.message||String(e); const next=(e.payload&&Array.isArray(e.payload.questions))?e.payload.questions:null; const fp=JSON.stringify({questions:next,shared:false,error:msg}); STATE.error=msg; STATE.questions=next; STATE.shared=false; STATE.lastFingerprint=fp; if(silent)shouldRender=(fp!==before)&&!isEditingPost();} finally{if(!silent)STATE.loading=false; if(shouldRender&&typeof view!=='undefined'&&view==='poolupdates')render();}}
   function startAutoRefresh(){if(STATE.autoTimer)return; STATE.autoTimer=setInterval(()=>{try{if(typeof view!=='undefined'&&view==='poolupdates')loadShared(true,true);}catch(e){}},8000);}
-  function questionCard(q){const valid=validTeamIds(); const rawVotes=q.votes||{}; const entries=Object.entries(rawVotes).map(([teamId,v])=>({teamId, option:typeof v==='string'?v:v&&v.option, teamName:typeof v==='object'?(v.teamName||teamId):teamId})).filter(v=>valid.has(v.teamId)&&(q.options||[]).includes(v.option)); const total=entries.length; const selected=selectedTeam(); const optionCards=(q.options||[]).map(opt=>{const voters=entries.filter(v=>v.option===opt); const count=voters.length,pct=total?Math.round(count/total*100):0; const here=selected&&rawVotes[selected]&&((typeof rawVotes[selected]==='string'?rawVotes[selected]:rawVotes[selected].option)===opt); const tags=voters.length?voters.map(v=>tagHtmlById(v.teamId,v.teamName)).join(''):'<span class="v58-empty-tags">No dog tags here yet</span>'; return `<button type="button" class="v58-option-card${here?' voted-here':''}" onclick="v59CastTeamVote('${esc(q.id)}','${esc(opt)}')"><div class="v58-option-name">${esc(opt)}</div><div class="v58-option-meta"><span>${count} vote${count===1?'':'s'}</span><span>${pct}%</span></div><span class="v57-bar"><span class="v57-fill" style="width:${pct}%"></span></span><div class="v58-tag-zone">${tags}</div></button>`;}).join(''); return `<article class="v57-question-card v70-poll-card">${creatorHtml(q)}<div class="v57-award-kicker">${esc(q.question)}</div><div class="v57-small">${total} team vote${total===1?'':'s'} · click an option to place your dog tag. Click another option to change it, or click your selected option again to remove it.</div><div class="v58-options">${optionCards}</div></article>`;}
+  function questionCard(q){const valid=validTeamIds(); const rawVotes=q.votes||{}; const entries=Object.entries(rawVotes).map(([teamId,v])=>({teamId, option:typeof v==='string'?v:v&&v.option, teamName:typeof v==='object'?(v.teamName||teamId):teamId})).filter(v=>valid.has(v.teamId)&&(q.options||[]).includes(v.option)); const total=entries.length; const selected=selectedTeam(); const optionCards=(q.options||[]).map(opt=>{const voters=entries.filter(v=>v.option===opt); const count=voters.length,pct=total?Math.round(count/total*100):0; const here=selected&&rawVotes[selected]&&((typeof rawVotes[selected]==='string'?rawVotes[selected]:rawVotes[selected].option)===opt); const tags=voters.length?voters.map(v=>tagHtmlById(v.teamId,v.teamName)).join(''):'<span class="v58-empty-tags">No dog tags here yet</span>'; return `<button type="button" class="v58-option-card${here?' voted-here':''}" onclick="v59CastTeamVote('${esc(q.id)}','${esc(opt)}')"><div class="v58-option-name">${esc(opt)}</div><div class="v58-option-meta"><span>${count} vote${count===1?'':'s'}</span><span>${pct}%</span></div><span class="v57-bar"><span class="v57-fill" style="width:${pct}%"></span></span><div class="v58-tag-zone">${tags}</div></button>`;}).join(''); return `<article class="v57-question-card v70-poll-card">${creatorHtml(q)}<div class="v76-card-tools"><button type="button" class="v76-remove-poll" onclick="event.stopPropagation();v59RemovePoll('${esc(q.id)}')">Remove Poll</button></div><div class="v57-award-kicker">${esc(q.question)}</div><div class="v57-small">${total} team vote${total===1?'':'s'} · click an option to place your dog tag. Click another option to change it, or click your selected option again to remove it.</div><div class="v58-options">${optionCards}</div></article>`;}
     function buildPage(){startAutoRefresh(); if(STATE.questions===null&&!STATE.loading&&!STATE.error)setTimeout(()=>loadShared(false),0); const qs=Array.isArray(STATE.questions)?STATE.questions:[]; const style=v70ActiveStyle(); const status=STATE.loading?'<div class="v59-status">Loading shared questions...</div>':STATE.error?`<div class="v59-status bad">Shared storage is not active yet: ${esc(STATE.error)}</div>`:STATE.shared?'<div class="v59-status good">Shared voting is active. Questions and votes update automatically from the API.</div>':'<div class="v59-status warn">Shared mode unavailable.</div>'; const autoNote=STATE.shared?'<div class="v59-auto-note">Auto-refresh is on. New questions and vote changes check quietly every few seconds.</div>':''; const selected=selectedTeamObj(); const byline=selected?`Posting as ${esc(teamName(selected))}.`:'No team selected. Use Leave Bar and re-enter through the front door before posting or voting.'; return `<div class="v57-page${STATE.loading?' v59-loading':''} v70-updates v70-style-${esc(style)}"><div class="v57-title">Pool Updates</div><div class="v57-note">You enter this room as the team you picked at the front door. Submit a suggestion or poll, then every team can vote once, change its vote, or click the same option again to remove its vote.</div>${status}${identityHtml()}${autoNote}<div id="v57Questions">${qs.length?qs.map(questionCard).join(''):'<div class="v57-empty">No shared questions found yet.</div>'}</div><div class="v58-admin-panel"><div class="v58-admin-label">Submit a suggestion or poll</div><div class="v59-create-by"><div><label class="v58-admin-label" for="v59QuestionKind">Post type</label><select id="v59QuestionKind" onchange="v59ToggleQuestionKind()"><option value="poll">Poll with custom options</option><option value="suggestion">Suggestion with simple voting</option></select></div><div class="v57-small">${byline} The creator team dog tag will display on the post.</div></div><div class="v58-admin-grid"><div><textarea id="v57Question" placeholder="Type your suggestion or poll question"></textarea><input id="v57Options" placeholder="Options separated by commas, ex: Yes, No, Maybe"><div id="v59OptionsHint" class="v57-small">Poll mode needs at least two comma-separated choices.</div></div><button class="v57-button" onclick="v59AddQuestion()">Submit</button></div></div></div>`;}
     window.v59SelectTeam=function(key){try{localStorage.setItem(selectedKey(),key||'');}catch(e){} render();};
   window.v58SelectTeam=window.v59SelectTeam;
@@ -2354,11 +2377,32 @@ loadFantraxApiPatch();
   window.v57AddQuestion=window.v59AddQuestion;
   window.v59CastTeamVote=async function(id,opt){const t=selectedTeamObj(); if(!t){alert('No team is selected. Use Leave Bar, pick your team at the front door, then come back.');return;} const key=teamKey(t); const q=(Array.isArray(STATE.questions)?STATE.questions:[]).find(x=>String(x.id)===String(id)); const current=q&&q.votes&&q.votes[key]; const currentOpt=typeof current==='string'?current:current&&current.option; const action=currentOpt===opt?'removeVote':'vote'; STATE.loading=true; render(); try{const js=await api(action,{questionId:id,option:opt,teamId:key,teamName:teamName(t)}); STATE.questions=js.questions||[]; STATE.shared=!!js.shared; STATE.error=null;}catch(e){STATE.error=e.message||String(e);} finally{STATE.loading=false; render();}};
   window.v58CastTeamVote=window.v59CastTeamVote;
+  window.v59RemovePoll=async function(id){
+    if(!id)return;
+    const t=selectedTeamObj();
+    const who=t?teamName(t):'this visitor';
+    if(!confirm('Remove this poll for everyone? This cannot be undone.'))return;
+    STATE.loading=true;
+    render();
+    try{
+      const js=await api('removeQuestion',{questionId:id,teamId:t?teamKey(t):'',teamName:who});
+      STATE.questions=js.questions||[];
+      STATE.shared=!!js.shared;
+      STATE.error=null;
+    }catch(e){
+      STATE.error=e.message||String(e);
+    } finally {
+      STATE.loading=false;
+      render();
+    }
+  };
+  window.v57RemovePoll=window.v59RemovePoll;
   const oldRender=window.render;
   window.render=function(){try{if(typeof view!=='undefined'&&view==='poolupdates'){const board=document.getElementById('board'); if(board){board.innerHTML=buildPage(); return;}}}catch(e){} return oldRender&&oldRender.apply(this,arguments);};
   function boot(){startAutoRefresh(); setTimeout(()=>{if(typeof view!=='undefined'&&view==='poolupdates')loadShared(true,false);},300);} if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 
+;
 
 (function(){
   const YEAR='2025';
@@ -2434,6 +2478,7 @@ loadFantraxApiPatch();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 
+;
 
 (function(){
   function awardEndYear(v, short){
@@ -2472,6 +2517,7 @@ loadFantraxApiPatch();
   try{if(typeof view!=='undefined'&&(view==='awards'||view==='managerrankings'))render();}catch(e){}
 })();
 
+;
 
 (function(){
   const V64_POOL='Forever Pool';
@@ -2510,6 +2556,7 @@ loadFantraxApiPatch();
   function boot(){setTimeout(()=>{try{if(typeof render==='function'&&typeof view!=='undefined'&&view==='awards')render();}catch(e){}},100);} if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 
+;
 
 (function(){
   const V65_POOL_TITLE='Forever Pool';
@@ -2588,6 +2635,7 @@ loadFantraxApiPatch();
   setTimeout(boot,500); setTimeout(removeManagerTab,1500);
 })();
 
+;
 
 (function(){
   function removeCutFeatures(){
@@ -2638,6 +2686,7 @@ loadFantraxApiPatch();
   try{new MutationObserver(removeCutFeatures).observe(document.documentElement,{childList:true,subtree:true});}catch(e){}
 })();
 
+;
 
 (function(){
   const SLUG='forever';

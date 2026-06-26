@@ -151,14 +151,9 @@ V75 POOL UPDATES TRUE HOCKEY CARD STYLE
 - Voting behavior is unchanged: click/tap an option to vote, another option to change, or the selected option again to remove your vote.
 
 
-V76 update:
-- Replaced the temporary hockey-player silhouette detail in Pool Updates with the uploaded cropped manager/fist photo asset: assets/pool-updates-angry-manager.png.
-- Added a Remove Poll button inside every poll card. It asks for confirmation, then removes the poll from the shared Redis question list for that pool.
-- Added a removeQuestion/removePoll action to api/pool-updates.js.
-- Voting behavior remains the same: click an option to vote/change, click your selected option again to remove your dog tag.
-
-
-V77 - Pool Updates tab restore
-- Restored the Pool Updates tab on both pool pages.
-- Kept the V76 manager-photo poll card and Remove Poll feature.
-- Added a small safeguard script so Pool Updates stays visible and hides ranking filters when opened.
+V78 safe Pool Updates patch
+- Rebuilt from V75, the last known-good Pool Updates tab/view package.
+- Added assets/pool-updates-angry-manager.png in the hockey-card detail spot.
+- Added Remove Poll using the Redis API removeQuestion action.
+- Kept dog-tag voting, auto-refresh, and click-selected-option-again vote removal.
+- Did not modify the tab routing from V75.
