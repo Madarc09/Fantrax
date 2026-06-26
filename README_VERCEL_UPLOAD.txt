@@ -127,3 +127,10 @@ V72 - Pool Updates cleaner card layout
 - Replaced the dog-tag-wall image watermark approach with a cleaner live HTML/CSS poll-card design.
 - Kept the dog tag voting behavior, auto-refresh, shared Redis voting, and click-same-option-to-remove-vote behavior from V71.
 - The poll card now uses a dark metal/gold bar theme with clearer question text and responsive option cards, so dynamic API text fits better on desktop and mobile.
+
+
+V73 - Pool Updates Barlow Hockey Cards
+- Replaced the live poll-card typography with a Barlow Condensed hockey-pool style.
+- The poll question and options remain real HTML/API text from the submit form, not baked into any image.
+- Tightened desktop font sizing and changed option cards to a cleaner sports voting-card layout.
+- Improved mobile voting: one-tap option rows, compact percent badge, dog tags preserved under each option, and selected options show a tap-again-to-remove hint.
