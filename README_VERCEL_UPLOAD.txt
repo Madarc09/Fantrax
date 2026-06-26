@@ -4,8 +4,7 @@ Includes:
 - Removed broken Matchup History tabs from both pools.
 - Added API Checker tab to both pools.
 - Added Team Compare tab to both pools.
-- Added SportsCenter-style LIVE WIRE ticker below each pool header image.
-- Ticker is designed for future news items: draft order, live matchups, commissioner notes, awards, and other updates.
+- V66 removed the LIVE WIRE/ticker strip from both pool pages. The restoration notes are archived below.
 - Best Seasons roster wording now clearly says Current Fantrax Roster only; historic season rosters are not exposed by the public API yet.
 
 Upload the CONTENTS of this extracted folder to GitHub, not the ZIP and not the outer folder.
@@ -55,3 +54,22 @@ After adding or editing variables, redeploy the project again. Old deployments d
 
 
 V63: Award/trophy labels now use the season-ending award year. Current 2025/26 awards display as 2026, previous 2024/25 awards display as 2025, etc.
+
+V66 PAGE CLEANUP
+----------------
+Requested cuts completed:
+- Removed the Salary Cap tab/page from both pool pages and deleted its helper routes (`api/capspace.js`, `api/dailyfaceoff.js`).
+- Removed the duplicate NHL Awards tab/page from both pool pages and deleted its helper route (`api/nhl-awards.js`). The normal Awards page remains.
+- Removed the LIVE WIRE/ticker strip from both pool pages.
+- Added a second fixed top-left link under the pool-switch link: "Leave Bar" -> ../index.html.
+
+Ticker reference / restore notes:
+- The final visible ticker before removal was the V27 "LIVEWIRE hard reset" implementation.
+- V27 created a sticky board with id `v27LivewireBoard` immediately after `.header .final-header-art`.
+- It hid the older `.sports-crawl` strip and used `.v27-livewire`, `.v27-brand`, `.v27-card`, `.v27-type`, and `.v27-text` for the flip-board styling.
+- Each pool set a title and league key: Basement Bar League used `V27_POOL_NAME='Basement Bar League'` and `V27_LEAGUE='bbl'`; Forever Pool used `V27_POOL_NAME='Forever Pool'` and `V27_LEAGUE='forever'`.
+- The board built items from `/api/fantrax?league=<bbl|forever>&endpoint=standings`, local draft-order data (`LOCAL_DRAFT_TICKER`, `buildDraftTickerItemsV18()`, or `DRAFT_ORDER`), and static news items for champion/prizes/meeting/rules/draft date.
+- It advanced automatically about every 4.2 seconds, allowed click/Enter/Space to advance manually, and refreshed the standings/item list about every 180 seconds.
+- Older ticker versions used `#sportsCrawl`, `#sportsCrawlTrack`, and scrolling `sportsCrawlV20/V21/V22/V23` animations. V27 superseded those.
+- In V66, the visible V27 block was removed, the original `ensureTabs()` no longer inserts `#sportsCrawl`, and a final cleanup guard removes any old ticker nodes if delayed scripts try to recreate them.
+
