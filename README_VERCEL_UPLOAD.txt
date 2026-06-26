@@ -156,3 +156,9 @@ V76 update:
 - Added a Remove Poll button inside every poll card. It asks for confirmation, then removes the poll from the shared Redis question list for that pool.
 - Added a removeQuestion/removePoll action to api/pool-updates.js.
 - Voting behavior remains the same: click an option to vote/change, click your selected option again to remove your dog tag.
+
+
+V77 - Pool Updates tab restore
+- Restored the Pool Updates tab on both pool pages.
+- Kept the V76 manager-photo poll card and Remove Poll feature.
+- Added a small safeguard script so Pool Updates stays visible and hides ranking filters when opened.

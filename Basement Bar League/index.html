@@ -1516,6 +1516,7 @@ body{min-height:100vh;background:#000;color:#fff;font-family:-apple-system,Blink
     <button class="tab" id="tabRules" onclick="setView('rules')">Rules</button>
     <button class="tab" id="tabDraft" onclick="setView('draftorder')">Draft Order</button>
     <button class="tab" id="tabCompare" onclick="setView('teamcompare')">Team Compare</button>
+    <button class="tab" id="tabPoolUpdates" onclick="setView('poolupdates')">Pool Updates</button>
   </div>
 </div>
 
@@ -4836,3 +4837,52 @@ document.addEventListener("error", function(e){
 </style>
 
 
+
+
+<!-- === V77 fix: restore Pool Updates tab visibility and filter behavior === -->
+<script>
+(function(){
+  function ensurePoolUpdatesTab(){
+    try{
+      var tabs=document.querySelector('.tabs');
+      if(!tabs) return null;
+      var btn=document.getElementById('tabPoolUpdates');
+      if(!btn){
+        btn=document.createElement('button');
+        btn.className='tab';
+        btn.id='tabPoolUpdates';
+        btn.textContent='Pool Updates';
+        tabs.appendChild(btn);
+      }
+      btn.onclick=function(){ if(typeof window.setView==='function') window.setView('poolupdates'); };
+      return btn;
+    }catch(e){ return null; }
+  }
+  function isPoolUpdates(){ try{return typeof view!=='undefined' && view==='poolupdates';}catch(e){return false;} }
+  function syncPoolUpdatesTab(){
+    var btn=ensurePoolUpdatesTab();
+    if(btn) btn.classList.toggle('active', isPoolUpdates());
+    if(isPoolUpdates()){
+      ['fRowEra','fRow1','fRow2','fRowA'].forEach(function(id){
+        var el=document.getElementById(id); if(el) el.classList.add('hide');
+      });
+    }
+  }
+  var priorCtrl=window.ctrl;
+  if(typeof priorCtrl==='function' && !priorCtrl.__v77PoolUpdatesFix){
+    var wrappedCtrl=function(){ var out=priorCtrl.apply(this,arguments); syncPoolUpdatesTab(); return out; };
+    wrappedCtrl.__v77PoolUpdatesFix=true;
+    window.ctrl=ctrl=wrappedCtrl;
+  }
+  var priorSetView=window.setView;
+  if(typeof priorSetView==='function' && !priorSetView.__v77PoolUpdatesFix){
+    var wrappedSetView=function(v){ var out=priorSetView.apply(this,arguments); syncPoolUpdatesTab(); return out; };
+    wrappedSetView.__v77PoolUpdatesFix=true;
+    window.setView=setView=wrappedSetView;
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', syncPoolUpdatesTab);
+  else syncPoolUpdatesTab();
+  setTimeout(syncPoolUpdatesTab,80);
+  setTimeout(syncPoolUpdatesTab,500);
+})();
+</script>
