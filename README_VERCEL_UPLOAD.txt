@@ -134,3 +134,10 @@ V73 - Pool Updates Barlow Hockey Cards
 - The poll question and options remain real HTML/API text from the submit form, not baked into any image.
 - Tightened desktop font sizing and changed option cards to a cleaner sports voting-card layout.
 - Improved mobile voting: one-tap option rows, compact percent badge, dog tags preserved under each option, and selected options show a tap-again-to-remove hint.
+
+
+V74 - Pool Updates visual correction
+- The generated font-preview image was only a concept mockup; V73 did not match closely because older V70/V71/V72 CSS blocks later in the file were still overriding parts of the new style.
+- Added a final V74 CSS override after the older blocks so the live page matches the intended Barlow Condensed hockey-poll card more closely.
+- Poll questions and options remain real HTML text from the API/submission form, not baked into images or watermarks.
+- Mobile layout is optimized as fast tap-to-vote cards, with dog-tag voter markers preserved under each option and horizontally scrollable on small screens.
