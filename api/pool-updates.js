@@ -163,17 +163,25 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, pool, shared: true, questions, item });
     }
 
-    if (action === 'vote') {
+    if (action === 'vote' || action === 'removeVote') {
       const questionId = safeText(body.questionId, 80);
       const teamId = safeText(body.teamId, 80);
       const teamName = safeText(body.teamName, 100);
       const option = safeText(body.option, 60);
       const q = questions.find(x => String(x.id) === questionId);
       if (!q) return res.status(404).json({ ok: false, error: 'Question not found.' });
-      if (!teamId || !option || !Array.isArray(q.options) || !q.options.includes(option)) {
-        return res.status(400).json({ ok: false, error: 'Select a valid team and option.' });
+      if (!teamId) {
+        return res.status(400).json({ ok: false, error: 'Select a valid team.' });
       }
       q.votes = q.votes || {};
+      if (action === 'removeVote') {
+        delete q.votes[teamId];
+        await saveQuestions(pool, questions);
+        return res.status(200).json({ ok: true, pool, shared: true, questions });
+      }
+      if (!option || !Array.isArray(q.options) || !q.options.includes(option)) {
+        return res.status(400).json({ ok: false, error: 'Select a valid team and option.' });
+      }
       q.votes[teamId] = { option, teamName: teamName || teamId, updatedAt: new Date().toISOString() };
       await saveQuestions(pool, questions);
       return res.status(200).json({ ok: true, pool, shared: true, questions });

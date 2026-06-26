@@ -113,3 +113,11 @@ V70 - Pool Updates style lab and mobile cleanup
 - The selected style is saved in localStorage per pool/browser, so the page remembers the design choice during normal browsing.
 - Mobile layout was tightened: smaller page margins, single-column poll options, smaller dog tags, compressed style picker, and more forgiving wrapping for long option text.
 - Auto-refresh behavior from V69 remains unchanged.
+
+
+V71 Pool Updates dog-tag wall + vote removal
+- Added assets/pool-updates-dogtag-wall.png as the fixed watermark/backdrop for each Pool Updates question card.
+- Removed the visible V70 style-picker from the page flow so all polls use the dog-tag wall look consistently.
+- The question/options are still real HTML text over the image, not baked into the image, so new API poll text fits dynamically.
+- Vote behavior now toggles: clicking a different option changes your vote; clicking your already-selected option removes your dog tag/vote.
+- API action removeVote was added to /api/pool-updates.js.
