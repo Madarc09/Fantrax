@@ -157,3 +157,9 @@ V78 safe Pool Updates patch
 - Added Remove Poll using the Redis API removeQuestion action.
 - Kept dog-tag voting, auto-refresh, and click-selected-option-again vote removal.
 - Did not modify the tab routing from V75.
+
+
+V79 note:
+- Built from V78 safe package.
+- Replaced the right-side Pool Updates hockey silhouette/detail image with the supplied angry manager photo asset.
+- Did not change Pool Updates tab/page routing, Redis voting, auto-refresh, Remove Poll, or vote-toggle behavior.
