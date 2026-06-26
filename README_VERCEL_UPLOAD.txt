@@ -90,3 +90,9 @@ V67B / V68 POOL UPDATES TEAM ENTRY NOTE
 - Suggestions use default vote options if no custom options are entered: Support it, Not for me, Needs discussion.
 - Polls still use comma-separated options typed by the submitting team.
 - The old fallback ticker sample poll was removed from api/pool-updates.js so removed ticker content does not reappear.
+
+V69 Pool Updates Auto-Refresh
+-----------------------------
+- Removed the visible "Refresh Questions" button from Pool Updates.
+- Pool Updates now auto-checks the shared Redis/API data about every 8 seconds while someone is viewing that room.
+- The auto-refresh is quiet: it only redraws the room when questions/votes actually changed, and it avoids wiping the post form while someone is actively typing a new suggestion/poll.
