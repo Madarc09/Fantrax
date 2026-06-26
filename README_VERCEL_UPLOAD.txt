@@ -73,3 +73,12 @@ Ticker reference / restore notes:
 - Older ticker versions used `#sportsCrawl`, `#sportsCrawlTrack`, and scrolling `sportsCrawlV20/V21/V22/V23` animations. V27 superseded those.
 - In V66, the visible V27 block was removed, the original `ensureTabs()` no longer inserts `#sportsCrawl`, and a final cleanup guard removes any old ticker nodes if delayed scripts try to recreate them.
 
+
+
+V67 entrance/team-selection update:
+- The main landing page no longer enters a pool immediately when a door is clicked.
+- Clicking Basement Bar League or Forever Pool opens a team selector first.
+- After a team is selected, the browser stores that choice for the visit and enters the selected bar.
+- The selected team is also written into the Pool Updates team-selection keys, so Pool Updates opens as that team.
+- The bar Rankings page auto-opens the selected team's trophy case.
+- Clicking Leave Bar clears the remembered team choice so the next visit starts fresh.

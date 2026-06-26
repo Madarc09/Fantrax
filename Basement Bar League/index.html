@@ -4214,3 +4214,86 @@ document.addEventListener("error", function(e){
   try{new MutationObserver(removeCutFeatures).observe(document.documentElement,{childList:true,subtree:true});}catch(e){}
 })();
 </script>
+
+
+<!-- === V67 selected-team carry-in and trophy dropdown hints === -->
+<style>
+  .row[onclick^="tog"] .r-tag{position:relative;padding-bottom:16px;}
+  .row[onclick^="tog"] .r-tag::after{content:"Trophy case ▼";position:absolute;left:50%;bottom:1px;transform:translateX(-50%);white-space:nowrap;font-family:monospace;font-size:8.5px;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,207,104,.82);text-shadow:0 1px 2px #000;pointer-events:none;}
+  .row[onclick^="tog"].open .r-tag::after{content:"Trophy case ▲";color:#ffe3a0;}
+  .v67-active-team-chip{max-width:1180px;margin:8px auto 0;padding:0 16px;box-sizing:border-box;text-align:center;font-family:monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.64);}
+  .v67-active-team-chip strong{color:#ffcf68;}
+  @media(max-width:760px){.row[onclick^="tog"] .r-tag::after{font-size:7.5px;letter-spacing:.3px;bottom:0;}.v67-active-team-chip{text-align:left;margin-top:6px;}}
+</style>
+<script>
+(function(){
+  const SLUG='bbl';
+  const POOL_LABEL='Basement Bar League';
+  const ACTIVE_KEY='fantraxActiveTeam:'+SLUG;
+  function readActive(){
+    try{return JSON.parse(sessionStorage.getItem(ACTIVE_KEY)||localStorage.getItem(ACTIVE_KEY)||'null');}catch(e){return null;}
+  }
+  function clearActive(){
+    try{
+      sessionStorage.removeItem('fantraxActiveTeam:bbl');
+      sessionStorage.removeItem('fantraxActiveTeam:forever');
+      localStorage.removeItem('fantraxActiveTeam:bbl');
+      localStorage.removeItem('fantraxActiveTeam:forever');
+      localStorage.removeItem('poolUpdates:v59:selectedTeam:bbl');
+      localStorage.removeItem('poolUpdates:v59:selectedTeam:forever');
+      localStorage.removeItem('poolUpdates:v58:selectedTeam:basement-bar-league');
+      localStorage.removeItem('poolUpdates:v58:selectedTeam:forever-pool');
+    }catch(e){}
+  }
+  function norm(x){return String(x||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'');}
+  function saveActiveByKey(key){
+    try{
+      let name='';
+      const list=(typeof TEAMS!=='undefined' && Array.isArray(TEAMS))?TEAMS:((typeof DATA!=='undefined'&&DATA&&Array.isArray(DATA.teams))?DATA.teams:[]);
+      const t=list.find(x=>String((x&&x.id)||x.name)===String(key))||list.find(x=>norm(x&&x.name)===norm(key));
+      if(t) name=String(t.name||'');
+      if(!name) return;
+      const payload=JSON.stringify({pool:SLUG,key:key,name:name,chosenAt:Date.now()});
+      sessionStorage.setItem(ACTIVE_KEY,payload);
+      localStorage.setItem(ACTIVE_KEY,payload);
+    }catch(e){}
+  }
+  function showChip(active){
+    if(!active||!active.name) return;
+    if(document.querySelector('.v67-active-team-chip')) return;
+    const host=document.querySelector('.filters')||document.querySelector('.tabs')||document.body.firstElementChild;
+    const chip=document.createElement('div');
+    chip.className='v67-active-team-chip';
+    chip.innerHTML='Entered as <strong></strong> · Pool Updates will use this team';
+    chip.querySelector('strong').textContent=active.name;
+    if(host&&host.parentNode) host.parentNode.insertBefore(chip, host);
+  }
+  function openSelectedTrophy(){
+    const active=readActive();
+    if(!active||!active.name) return;
+    showChip(active);
+    try{ if(typeof window.setView==='function') window.setView('rankings'); else if(typeof setView==='function') setView('rankings'); }catch(e){}
+    setTimeout(function(){
+      const rows=Array.from(document.querySelectorAll('.row[onclick^="tog"]'));
+      const idx=rows.findIndex(row=>{
+        const img=row.querySelector('.r-tag img[alt]');
+        const alt=img?img.getAttribute('alt'):'';
+        return norm(alt)===norm(active.name) || norm(alt)===norm(active.key) || norm(active.name).includes(norm(alt)) || norm(alt).includes(norm(active.name));
+      });
+      if(idx<0) return;
+      try{ if(typeof window.tog==='function') window.tog(idx); else rows[idx].click(); }catch(e){ rows[idx].click(); }
+    }, 180);
+  }
+  document.querySelectorAll('.leave-bar-link.home-bar-link').forEach(a=>a.addEventListener('click', clearActive));
+  const oldV59=window.v59SelectTeam;
+  if(typeof oldV59==='function'){
+    window.v59SelectTeam=function(key){saveActiveByKey(key); return oldV59.apply(this,arguments);};
+  }
+  const oldV58=window.v58SelectTeam;
+  if(typeof oldV58==='function'){
+    window.v58SelectTeam=function(key){saveActiveByKey(key); return oldV58.apply(this,arguments);};
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',openSelectedTrophy); else openSelectedTrophy();
+  setTimeout(openSelectedTrophy, 700);
+})();
+</script>
